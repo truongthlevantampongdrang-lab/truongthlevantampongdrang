@@ -29,6 +29,9 @@ export default function App() {
   const [showConfirmPass, setShowConfirmPass] = useState<boolean>(false);
   const [credsError, setCredsError] = useState<string>("");
   const [credsSuccess, setCredsSuccess] = useState<string>("");
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
+    return localStorage.getItem("lvt_gemini_api_key") || "";
+  });
 
   // Floating Admin Login & Options States
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
@@ -212,6 +215,20 @@ export default function App() {
   const updateStudents = (items: StudentScore[]) => setStudents(items);
   const updateSchedules = (items: ClassSchedule[]) => setSchedules(items);
 
+  const openChangeCredsModal = () => {
+    setCredsError("");
+    setCredsSuccess("");
+    const storedUsername = localStorage.getItem("lvt_admin_username") || "admin";
+    const storedPassword = localStorage.getItem("lvt_admin_password") || "admin";
+    setNewUsername(storedUsername);
+    setNewPassword(storedPassword);
+    setConfirmNewPassword(storedPassword);
+    setCurrentUsername("");
+    setCurrentPassword("");
+    setGeminiApiKey(localStorage.getItem("lvt_gemini_api_key") || "");
+    setShowChangeCredsModal(true);
+  };
+
   const handleChangeCredsSubmit = (e: FormEvent) => {
     e.preventDefault();
     setCredsError("");
@@ -253,8 +270,9 @@ export default function App() {
 
     localStorage.setItem("lvt_admin_username", newUsername.trim());
     localStorage.setItem("lvt_admin_password", newPassword);
+    localStorage.setItem("lvt_gemini_api_key", geminiApiKey.trim());
 
-    setCredsSuccess("Thay đổi tài khoản quản trị thành công!");
+    setCredsSuccess("Cấu hình tài khoản & Khoá API thành công!");
 
     // Reset fields
     setCurrentUsername("");
@@ -437,11 +455,7 @@ export default function App() {
             </div>
             <div className="flex items-center space-x-2 shrink-0 sm:ml-4">
               <button
-                onClick={() => {
-                  setCredsError("");
-                  setCredsSuccess("");
-                  setShowChangeCredsModal(true);
-                }}
+                onClick={openChangeCredsModal}
                 className="px-2 py-0.5 bg-emerald-950 text-amber-400 border border-emerald-900 rounded hover:bg-emerald-900 transition-colors text-[10px] font-bold"
               >
                 ⚙️ Đổi Mật Khẩu/Tên Đăng Nhập
@@ -600,6 +614,29 @@ export default function App() {
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
                     placeholder="Nhập lại mật khẩu mới để xác nhận"
                     className="w-full rounded-lg border border-slate-200 bg-slate-50/30 px-3 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* GEMINI KEY CONFIG */}
+              <div className="rounded-2xl bg-emerald-50/40 p-3 border border-emerald-100/50 space-y-2 mt-2">
+                <h4 className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1">
+                  <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
+                  <span>Cấu hình Trợ lý AI (Gemini Key)</span>
+                </h4>
+                <p className="text-[10px] text-slate-500 leading-normal">
+                  Nếu bạn triển khai lên **GitHub Pages** (hoặc static host), điền key ở đây để Trợ lý AI hoạt động trực tiếp từ trình duyệt mà không cần máy chủ.
+                </p>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">
+                    Gemini API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    placeholder="Dán mã khóa AIzaSy... của bạn tại đây"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
               </div>
@@ -965,9 +1002,7 @@ export default function App() {
             <div className="mt-4 space-y-2.5">
               <button
                 onClick={() => {
-                  setCredsError("");
-                  setCredsSuccess("");
-                  setShowChangeCredsModal(true);
+                  openChangeCredsModal();
                   setShowAdminMenuModal(false);
                 }}
                 className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-900 border border-slate-100 text-slate-700 font-sans text-xs font-bold transition-all text-left"

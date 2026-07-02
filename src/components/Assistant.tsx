@@ -2,6 +2,58 @@ import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "../types";
 import { Send, Sparkles, User, GraduationCap, AlertCircle, RefreshCw, Star, Heart, CheckCircle2 } from "lucide-react";
 
+const systemInstruction = `
+Bạn là "Trợ lý Học tập Trường Tiểu học Lê Văn Tám" - một AI thân thiện, am hiểu và nhiệt huyết, hỗ trợ học sinh, phụ huynh và giáo viên của Trường Tiểu học Lê Văn Tám, xã Pơng Drang, tỉnh Đắk Lắk.
+Hãy xưng hô thân thiện, ấm áp và gần gũi (Ví dụ: xưng "Cô", "Thầy" hoặc "Trợ lý Lê Văn Tám" và gọi người trò chuyện là "Em", "Con" với học sinh, hoặc "Anh/Chị", "Quý phụ huynh" với phụ huynh, hoặc "Đồng nghiệp", "Thầy/Cô" với giáo viên).
+
+Nhiệm vụ của bạn:
+1. Hỗ trợ học sinh (Học cấp 1 từ lớp 1 đến lớp 5): Giải thích bài tập Toán, Tiếng Việt, Khoa học, Lịch sử, Tiếng Anh một cách cực kỳ dễ hiểu, ngắn gọn, có ví dụ sinh động, khuyến khích các con tự học, không giải hộ ngay lập tức mà hướng dẫn từng bước. khen ngợi khi học sinh làm đúng.
+2. Hỗ trợ phụ huynh: Giải đáp thắc mắc về tuyển sinh tiểu học, lịch học tập, phương pháp đồng hành cùng con học bài ở nhà, dạy con đọc viết, ứng xử tâm lý trẻ em tiểu học.
+3. Hỗ trợ giáo viên: Gợi ý ý tưởng bài giảng sáng tạo, soạn câu hỏi trắc nghiệm vui nhộn, viết kịch bản hoạt động ngoại khóa, các trò chơi lớp học thú vị.
+
+Lưu ý: Luôn trả lời bằng tiếng Việt lịch sự, truyền cảm hứng học tập và tràn đầy năng lượng tích cực của mái trường tiểu học. Giữ câu trả lời súc tích, dễ đọc bằng cách xuống dòng và dùng định dạng markdown đơn giản.
+`;
+
+const callGeminiDirectly = async (messages: ChatMessage[], apiKey: string) => {
+  const contents = messages.map(m => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }]
+  }));
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  
+  const payload = {
+    contents,
+    systemInstruction: {
+      parts: [{ text: systemInstruction }]
+    },
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2048,
+    }
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `HTTP error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error("Không nhận được câu trả lời từ máy chủ Gemini.");
+  }
+  return text;
+};
+
 export default function Assistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -45,25 +97,69 @@ export default function Assistant() {
     setIsLoading(true);
     setErrorText("");
 
+    // @ts-ignore
+    const clientApiKey = (import.meta.env?.VITE_GEMINI_API_KEY as string) || localStorage.getItem("lvt_gemini_api_key") || "";
+
     try {
-      const response = await fetch("/api/assistant", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messages: updatedMessages }),
-      });
+      let success = false;
+      let assistantReply = "";
 
-      const data = await response.json();
+      try {
+        const response = await fetch("/api/assistant", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ messages: updatedMessages }),
+        });
 
-      if (response.ok && data.content) {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
-      } else {
-        setErrorText(data.error || "Không thể kết nối với máy chủ AI. Quý phụ huynh vui lòng kiểm tra lại cấu hình hoặc kết nối.");
+        // Check if we received HTML (like a 404 page from static hosting like GitHub Pages) instead of JSON
+        const contentType = response.headers.get("content-type");
+        if (response.status === 404 || (contentType && !contentType.includes("application/json"))) {
+          if (clientApiKey) {
+            console.log("Backend failed or not found (static page). Trying client-side direct calling...");
+            assistantReply = await callGeminiDirectly(updatedMessages, clientApiKey);
+            success = true;
+          } else {
+            setErrorText("Không tìm thấy máy chủ backend AI (Tính năng AI cần máy chủ hoạt động, hoặc bạn cần cấu hình Khoá API trực tiếp trong bảng điều khiển Quản trị).");
+          }
+        } else {
+          const data = await response.json();
+          if (response.ok && data.content) {
+            assistantReply = data.content;
+            success = true;
+          } else {
+            // Backend returned 500 or error, check if client key can save us
+            if (clientApiKey) {
+              console.log("Backend returned an error. Attempting fallback direct Gemini API call...");
+              assistantReply = await callGeminiDirectly(updatedMessages, clientApiKey);
+              success = true;
+            } else {
+              setErrorText(data.error || "Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại cấu hình hoặc khoá API.");
+            }
+          }
+        }
+      } catch (backendErr) {
+        // Network error - e.g. server is down or running on fully static client-only host
+        if (clientApiKey) {
+          console.log("Backend connection failed. Attempting direct Gemini API call...", backendErr);
+          assistantReply = await callGeminiDirectly(updatedMessages, clientApiKey);
+          success = true;
+        } else {
+          throw backendErr;
+        }
+      }
+
+      if (success) {
+        setMessages((prev) => [...prev, { role: "assistant", content: assistantReply }]);
       }
     } catch (err: any) {
       console.error(err);
-      setErrorText("Lỗi đường truyền internet hoặc máy chủ đang bận. Vui lòng gửi lại tin nhắn.");
+      setErrorText(
+        clientApiKey 
+          ? `Lỗi kết nối Gemini trực tiếp: ${err.message || "Vui lòng kiểm tra lại Key."}`
+          : "Không tìm thấy máy chủ backend và chưa cấu hình Khoá API trực tiếp. Nếu bạn đang chạy trên GitHub Pages, vui lòng vào Bảng điều khiển Quản trị -> Cấu hình & Đổi mật khẩu để thêm Khoá Gemini API."
+      );
     } finally {
       setIsLoading(false);
     }
