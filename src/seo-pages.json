@@ -1,0 +1,52 @@
+[
+  {
+    "tab": "home",
+    "path": "",
+    "title": "Trường Tiểu học Lê Văn Tám - Xã Pơng Drang, Đắk Lắk",
+    "description": "Trang thông tin điện tử Trường Tiểu học Lê Văn Tám, xã Pơng Drang, tỉnh Đắk Lắk. Tra cứu điểm học sinh, xem tin tức, thông báo và hoạt động giáo dục.",
+    "keywords": "Trường Tiểu học Lê Văn Tám, TH Lê Văn Tám, Pơng Drang, Đắk Lắk, tra cứu điểm học sinh, tin tức nhà trường",
+    "breadcrumb": "Trang chủ",
+    "priority": "1.0",
+    "changefreq": "daily"
+  },
+  {
+    "tab": "about",
+    "path": "gioi-thieu",
+    "title": "Giới thiệu - Trường Tiểu học Lê Văn Tám",
+    "description": "Tìm hiểu lịch sử, tầm nhìn, đội ngũ và môi trường giáo dục của Trường Tiểu học Lê Văn Tám tại xã Pơng Drang, Đắk Lắk.",
+    "keywords": "giới thiệu Trường Tiểu học Lê Văn Tám, đội ngũ giáo viên, trường tiểu học Đắk Lắk",
+    "breadcrumb": "Giới thiệu",
+    "priority": "0.8",
+    "changefreq": "monthly"
+  },
+  {
+    "tab": "news",
+    "path": "tin-tuc",
+    "title": "Tin tức và hoạt động - Trường Tiểu học Lê Văn Tám",
+    "description": "Cập nhật thông báo, tin tức, sự kiện và hoạt động giáo dục mới nhất của Trường Tiểu học Lê Văn Tám.",
+    "keywords": "tin tức Trường Tiểu học Lê Văn Tám, thông báo nhà trường, hoạt động giáo dục",
+    "breadcrumb": "Tin tức",
+    "priority": "0.9",
+    "changefreq": "daily"
+  },
+  {
+    "tab": "portal",
+    "path": "cong-tra-cuu",
+    "title": "Cổng tra cứu điểm và đăng ký CLB - Trường Tiểu học Lê Văn Tám",
+    "description": "Tra cứu kết quả học tập, thời khóa biểu và đăng ký câu lạc bộ trực tuyến cho học sinh Trường Tiểu học Lê Văn Tám.",
+    "keywords": "tra cứu điểm học sinh, thời khóa biểu, đăng ký câu lạc bộ, TH Lê Văn Tám",
+    "breadcrumb": "Cổng tra cứu",
+    "priority": "0.9",
+    "changefreq": "weekly"
+  },
+  {
+    "tab": "assistant",
+    "path": "tro-ly-ai",
+    "title": "Trợ lý AI Lê Văn Tám - Hỗ trợ phụ huynh và học sinh",
+    "description": "Trợ lý AI Lê Văn Tám hỗ trợ giải đáp thông tin học tập, nhà trường và các câu hỏi thường gặp cho phụ huynh, học sinh.",
+    "keywords": "trợ lý AI Lê Văn Tám, hỏi đáp nhà trường, hỗ trợ học sinh",
+    "breadcrumb": "Trợ lý AI",
+    "priority": "0.7",
+    "changefreq": "weekly"
+  }
+]

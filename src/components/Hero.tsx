@@ -57,19 +57,19 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     {
       title: "Gìn Giữ Bản Sắc Tây Nguyên",
       description: "Tự hào duy trì Câu lạc bộ Cồng Chiêng Nhí & các tiết học nhạc cụ dân tộc truyền thống, tôn vinh di sản văn hóa Đắk Lắk.",
-      image: "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&fm=webp&q=75&w=400",
       tag: "Văn Hóa",
     },
     {
       title: "Công Nghệ & Trí Tuệ Nhân Tạo",
       description: "Ứng dụng công nghệ giáo dục hiện đại và tích hợp Trợ lý AI 'Lê Văn Tám' đồng hành 24/7 cùng phụ huynh và học sinh.",
-      image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&fm=webp&q=75&w=400",
       tag: "Sáng Tạo",
     },
     {
       title: "Môi Trường Học Hạnh Phúc",
       description: "Mỗi ngày đến trường là một ngày vui. Khuôn viên xanh, phòng lớp thân thiện, bồi dưỡng toàn diện Trí - Thể - Mỹ.",
-      image: "https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&q=80&w=400",
+      image: "https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&fm=webp&q=75&w=400",
       tag: "Phát Triển",
     }
   ];
@@ -158,8 +158,10 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                 {/* Main image card */}
                 <div className="relative rounded-xl overflow-hidden border-2 border-emerald-800 bg-emerald-950 aspect-[4/3] shadow-2xl">
                   <img
-                    src="https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=600"
+                    src="https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&fm=webp&q=75&w=600"
                     alt="School classroom"
+                    fetchPriority="high"
+                    decoding="async"
                     className="h-full w-full object-cover opacity-90 hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-transparent to-transparent"></div>
@@ -229,6 +231,8 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
               <img
                 src={schoolInfo.principalAvatar}
                 alt="Principal Portrait"
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -272,6 +276,8 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                 <img
                   src={h.image}
                   alt={h.title}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover hover:scale-105 transition-transform duration-500"
                 />
                 <span className="absolute top-4 left-4 rounded-full bg-emerald-900/90 backdrop-blur-sm px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white border border-emerald-700/50">

@@ -476,7 +476,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
           name,
           className: detectedClass,
           birthDate,
-          avatar: `https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200`,
+          avatar: `https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200`,
           grades,
           conduct,
           comment: `Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.`,
@@ -722,7 +722,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       name: "",
       className: initialClass,
       birthDate: "10/10/2016",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=webp&q=75&w=200",
       math: 9,
       vietnamese: 9,
       science: 9,
@@ -787,7 +787,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       name: studentForm.name,
       className: studentForm.className,
       birthDate: studentForm.birthDate,
-      avatar: studentForm.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+      avatar: studentForm.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=webp&q=75&w=200",
       grades: {
         math: Number(studentForm.math),
         vietnamese: Number(studentForm.vietnamese),
@@ -1114,6 +1114,8 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                           <img
                             src={stu.avatar}
                             alt={stu.name}
+                            loading="lazy"
+                            decoding="async"
                             className="h-9 w-9 rounded-full object-cover border border-slate-200"
                           />
                           <div className="min-w-0">
@@ -1250,6 +1252,8 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                     <img
                       src={searchedStudent.avatar}
                       alt={searchedStudent.name}
+                      loading="lazy"
+                      decoding="async"
                       className="h-16 w-16 rounded-full object-cover border-2 border-emerald-100 shadow-sm shrink-0"
                     />
                     <div className="text-center sm:text-left space-y-1">

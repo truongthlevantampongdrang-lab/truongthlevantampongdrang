@@ -1,17 +1,38 @@
-import { useState, useEffect, FormEvent } from "react";
+import { lazy, Suspense, useState, useEffect, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
-import About from "./components/About";
-import News from "./components/News";
-import Portal from "./components/Portal";
-import Assistant from "./components/Assistant";
 import { sampleNews, sampleClubs, sampleStudents, classSchedules } from "./data";
 import { NewsItem, SchoolClub, StudentScore, ClassSchedule } from "./types";
 import { Sparkles, Shield, Eye, EyeOff, Check, X, User, Key, RefreshCw, LogOut, Settings, Mail } from "lucide-react";
+import {
+  buildStructuredData,
+  getPagePath,
+  getPageUrl,
+  getSeoPage,
+  getSeoPageByPath,
+  SEO_PAGES,
+  SITE_BASE_PATH,
+  upsertLink,
+  upsertMeta
+} from "./seo";
+
+const About = lazy(() => import("./components/About"));
+const News = lazy(() => import("./components/News"));
+const Portal = lazy(() => import("./components/Portal"));
+const Assistant = lazy(() => import("./components/Assistant"));
+
+function getInitialTab() {
+  const redirectPath = new URLSearchParams(window.location.search).get("p");
+  if (redirectPath) {
+    return getSeoPageByPath(`${SITE_BASE_PATH}${redirectPath.replace(/^\/+/, "")}`).tab;
+  }
+
+  return getSeoPageByPath(window.location.pathname).tab;
+}
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>("home");
+  const [activeTab, setActiveTab] = useState<string>(getInitialTab);
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("lvt_is_admin");
     return saved === "true";
@@ -87,6 +108,47 @@ export default function App() {
     localStorage.setItem("lvt_is_admin", isAdminMode ? "true" : "false");
   }, [isAdminMode]);
 
+  useEffect(() => {
+    const page = getSeoPage(activeTab);
+    const pageUrl = getPageUrl(page);
+
+    document.title = page.title;
+    upsertMeta('meta[name="description"]', { name: "description", content: page.description });
+    upsertMeta('meta[name="keywords"]', { name: "keywords", content: page.keywords });
+    upsertMeta('meta[property="og:title"]', { property: "og:title", content: page.title });
+    upsertMeta('meta[property="og:description"]', { property: "og:description", content: page.description });
+    upsertMeta('meta[property="og:url"]', { property: "og:url", content: pageUrl });
+    upsertMeta('meta[name="twitter:title"]', { name: "twitter:title", content: page.title });
+    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description", content: page.description });
+    upsertLink('link[rel="canonical"]', { rel: "canonical", href: pageUrl });
+
+    const schema = document.getElementById("structured-data") || document.createElement("script");
+    schema.id = "structured-data";
+    schema.setAttribute("type", "application/ld+json");
+    schema.textContent = JSON.stringify(buildStructuredData(page));
+    if (!schema.parentNode) {
+      document.head.appendChild(schema);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const page = getSeoPage(activeTab);
+    const desiredPath = getPagePath(page);
+
+    if (window.location.pathname !== desiredPath || window.location.search) {
+      window.history.replaceState({ tab: activeTab }, "", desiredPath);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveTab(getSeoPageByPath(window.location.pathname).tab);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   // Load / Save School Info
   const [schoolInfo, setSchoolInfo] = useState(() => {
     const saved = localStorage.getItem("lvt_school_info");
@@ -107,7 +169,7 @@ export default function App() {
       principalName: "Cô Nguyễn Thị Xuân",
       principalTitle: "Hiệu trưởng Nhà trường",
       principalWord: "Tại Trường Tiểu học Lê Văn Tám xã Pơng Drang, chúng tôi tin tưởng sâu sắc rằng mỗi đứa trẻ đều sở hữu những năng lực tiềm ẩn riêng biệt. Sứ mệnh của tập thể sư phạm nhà trường là truyền lửa đam mê học hỏi, bồi đắp lòng nhân ái, lòng yêu quê hương Tây Nguyên và chuẩn bị cho các em những hành trang vững vàng nhất bước vào tương lai. Chúng tôi cam kết mang tới một môi trường dạy học chất lượng, an toàn, tràn ngập tình yêu thương và tôn trọng sự khác biệt.",
-      principalAvatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=300"
+      principalAvatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&fm=webp&q=75&w=300"
     };
   });
 
@@ -214,6 +276,16 @@ export default function App() {
   const updateClubs = (items: SchoolClub[]) => setClubs(items);
   const updateStudents = (items: StudentScore[]) => setStudents(items);
   const updateSchedules = (items: ClassSchedule[]) => setSchedules(items);
+
+  const navigateToTab = (tab: string) => {
+    const page = SEO_PAGES.find((item) => item.tab === tab) || SEO_PAGES[0];
+    const nextPath = getPagePath(page);
+
+    setActiveTab(page.tab);
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({ tab: page.tab }, "", nextPath);
+    }
+  };
 
   const openChangeCredsModal = () => {
     setCredsError("");
@@ -397,7 +469,7 @@ export default function App() {
       case "home":
         return (
           <Hero
-            onNavigate={(tab) => setActiveTab(tab)}
+            onNavigate={navigateToTab}
             isAdminMode={isAdminMode}
             schoolInfo={schoolInfo}
             updateSchoolInfo={updateSchoolInfo}
@@ -434,7 +506,7 @@ export default function App() {
       default:
         return (
           <Hero
-            onNavigate={(tab) => setActiveTab(tab)}
+            onNavigate={navigateToTab}
             isAdminMode={isAdminMode}
             schoolInfo={schoolInfo}
             updateSchoolInfo={updateSchoolInfo}
@@ -473,7 +545,7 @@ export default function App() {
         {/* Navigation Header */}
         <Header
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={navigateToTab}
           isAdminMode={isAdminMode}
           setIsAdminMode={setIsAdminMode}
         />
@@ -481,7 +553,9 @@ export default function App() {
         {/* Main Content Stage container */}
         <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="animate-in fade-in duration-300">
-            {renderContent()}
+            <Suspense fallback={<div className="py-16 text-center text-sm font-semibold text-emerald-700">Đang tải nội dung...</div>}>
+              {renderContent()}
+            </Suspense>
           </div>
         </main>
       </div>

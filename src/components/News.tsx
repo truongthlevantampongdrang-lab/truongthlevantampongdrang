@@ -43,7 +43,7 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
       category: "Tin tức",
       excerpt: "",
       content: "",
-      image: "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&q=80&w=800",
+      image: "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&fm=webp&q=75&w=800",
       author: "Văn phòng nhà trường"
     });
     setShowEditForm(true);
@@ -99,7 +99,7 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
         date: todayStr,
         excerpt: newsForm.excerpt || newsForm.content.slice(0, 150) + "...",
         content: newsForm.content,
-        image: newsForm.image || "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&q=80&w=800",
+        image: newsForm.image || "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&fm=webp&q=75&w=800",
         author: newsForm.author || "Ban Biên Tập"
       };
       updateNewsList([newArticle, ...newsList]);
@@ -183,6 +183,8 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
                 <img
                   src={news.image}
                   alt={news.title}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 {/* Category tag */}
@@ -269,6 +271,8 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
               <img
                 src={selectedArticle.image}
                 alt={selectedArticle.title}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-emerald-950/20 to-transparent"></div>

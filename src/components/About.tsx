@@ -53,14 +53,14 @@ export default function About({ isAdminMode }: AboutProps) {
         id: "principal",
         name: "Cô Nguyễn Thị Xuân",
         title: "Hiệu trưởng",
-        avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=200",
+        avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&fm=webp&q=75&w=200",
         desc: "Chịu trách nhiệm chung, định hướng chiến lược và xây dựng văn hóa trường học hạnh phúc."
       },
       {
         id: "vice_principal",
         name: "Thầy Y Ring Niê",
         title: "Phó Hiệu trưởng",
-        avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200",
+        avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&fm=webp&q=75&w=200",
         desc: "Phụ trách công tác chuyên môn, kiểm định chất lượng dạy học và phong trào thi đua."
       }
     ];
@@ -157,11 +157,11 @@ export default function About({ isAdminMode }: AboutProps) {
   const getAvatarByName = (name: string): string => {
     const lower = name.toLowerCase();
     if (lower.startsWith("cô") || lower.startsWith("bà") || lower.startsWith("chị") || lower.includes("thị")) {
-      return "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200"; // Female leader
+      return "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&fm=webp&q=75&w=200"; // Female leader
     } else if (lower.startsWith("thầy") || lower.startsWith("ông") || lower.startsWith("anh")) {
-      return "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200"; // Male leader
+      return "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&fm=webp&q=75&w=200"; // Male leader
     }
-    return "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"; // Neutral leader
+    return "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&fm=webp&q=75&w=200"; // Neutral leader
   };
 
   const handleSaveLeader = (e: FormEvent) => {
@@ -591,6 +591,8 @@ export default function About({ isAdminMode }: AboutProps) {
                 <img
                   src={leader.avatar}
                   alt={leader.name}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover"
                 />
               </div>
