@@ -1,0 +1,15 @@
+{
+  "name": "Trường Tiểu học Lê Văn Tám",
+  "short_name": "TH Lê Văn Tám",
+  "start_url": "/truongthlevantampongdrang/",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
