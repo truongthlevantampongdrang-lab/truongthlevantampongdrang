@@ -929,6 +929,13 @@
       "title": "Phó Hiệu trưởng",
       "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&fm=webp&q=75&w=200",
       "desc": "Phụ trách công tác chuyên môn, kiểm định chất lượng dạy học và phong trào thi đua."
+    },
+    {
+      "id": "leader_1783068267984",
+      "name": "Thầy Uông Đông Anh",
+      "title": "Giáo viên",
+      "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "desc": "Thầy Uông Đông Anh, với tâm huyết và sự tận tình, luôn mang đến những giờ học bổ ích, giúp các em học sinh phát triển toàn diện."
     }
   ],
   "aboutMilestones": [
@@ -953,5 +960,5 @@
       "description": "Tiên phong ứng dụng công nghệ giáo dục số, phòng tin học hiện đại hóa và trang bị học cụ tương tác thông minh cho 100% các lớp học."
     }
   ],
-  "updatedAt": "2026-07-03T08:44:00.208Z"
+  "updatedAt": "2026-07-03T08:45:45.144Z"
 }
