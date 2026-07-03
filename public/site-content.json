@@ -125,76 +125,652 @@
   ],
   "students": [
     {
-      "id": "LVT-2026-01",
-      "name": "Nguyễn Minh Anh",
-      "className": "4A",
-      "birthDate": "12/04/2016",
-      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=webp&q=75&w=200",
-      "grades": {
-        "math": 9.5,
-        "vietnamese": 9,
-        "science": 10,
-        "english": 9.5,
-        "historyGeo": 9,
-        "informatics": 10
-      },
-      "conduct": "Tốt",
-      "comment": "Em Minh Anh học tập rất chăm chỉ, thông minh và gương mẫu. Tích cực phát biểu xây dựng bài và giúp đỡ các bạn trong lớp học.",
-      "rank": "Hoàn thành xuất sắc"
-    },
-    {
-      "id": "LVT-2026-02",
-      "name": "H'Riêk Niê",
-      "className": "4A",
-      "birthDate": "23/08/2016",
+      "id": "LVT-2015-01",
+      "name": "Nguyễn Thái An",
+      "className": "5A",
+      "birthDate": "19/06/2015",
       "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
       "grades": {
-        "math": 8.5,
-        "vietnamese": 9.5,
-        "science": 9,
-        "english": 9,
-        "historyGeo": 10,
-        "informatics": 9.5
-      },
-      "conduct": "Tốt",
-      "comment": "Em H'Riêk có năng khiếu đặc biệt môn Lịch sử & Địa lý và rất chăm chỉ. Đọc Tiếng Việt diễn cảm và có giọng hát rất hay trong CLB Đội chiêng.",
-      "rank": "Hoàn thành xuất sắc"
-    },
-    {
-      "id": "LVT-2026-03",
-      "name": "Trần Hoàng Nam",
-      "className": "4B",
-      "birthDate": "05/11/2016",
-      "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&fm=webp&q=75&w=200",
-      "grades": {
-        "math": 8,
-        "vietnamese": 7.5,
-        "science": 8.5,
-        "english": 7,
-        "historyGeo": 8,
-        "informatics": 8.5
-      },
-      "conduct": "Tốt",
-      "comment": "Em Nam ngoan ngoãn, hăng hái tham gia hoạt động thể thao của trường. Cần rèn luyện thêm kỹ năng viết chính tả Tiếng Việt và tự tin nói Tiếng Anh hơn.",
-      "rank": "Hoàn thành tốt"
-    },
-    {
-      "id": "LVT-2026-04",
-      "name": "Y Blôk Êban",
-      "className": "5C",
-      "birthDate": "14/01/2015",
-      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&fm=webp&q=75&w=200",
-      "grades": {
+        "vietnamese": 7,
         "math": 9,
-        "vietnamese": 8.5,
-        "science": 9.5,
+        "science": 10,
+        "historyGeo": 8,
         "english": 8,
-        "historyGeo": 9.5,
         "informatics": 9
       },
       "conduct": "Tốt",
-      "comment": "Y Blôk có tư duy Toán học rất nhanh nhạy, tính cách năng nổ, là Chi đội trưởng gương mẫu, luôn hoàn thành xuất sắc các hoạt động Sao nhi đồng.",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-02",
+      "name": "Nguyễn Trâm Anh",
+      "className": "5A",
+      "birthDate": "23/10/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 6,
+        "science": 7,
+        "historyGeo": 9,
+        "english": 4,
+        "informatics": 6
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-03",
+      "name": "Võ Tuấn Anh",
+      "className": "5A",
+      "birthDate": "10/04/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 9,
+        "science": 9,
+        "historyGeo": 8,
+        "english": 9,
+        "informatics": 10
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-04",
+      "name": "Trần Gia Bảo",
+      "className": "5A",
+      "birthDate": "28/10/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 7,
+        "science": 9,
+        "historyGeo": 8,
+        "english": 10,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-05",
+      "name": "Trần Minh Chí",
+      "className": "5A",
+      "birthDate": "14/01/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 8,
+        "science": 10,
+        "historyGeo": 7,
+        "english": 8,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-06",
+      "name": "Nguyễn Gia Tiến Dũng",
+      "className": "5A",
+      "birthDate": "14/02/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 8,
+        "science": 9,
+        "historyGeo": 9,
+        "english": 7,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-07",
+      "name": "Nguyễn Trung Dũng",
+      "className": "5A",
+      "birthDate": "28/01/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 6,
+        "math": 6,
+        "science": 9,
+        "historyGeo": 6,
+        "english": 4,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-08",
+      "name": "Lê Vũ Anh Duy",
+      "className": "5A",
+      "birthDate": "22/12/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 5,
+        "math": 5,
+        "science": 7,
+        "historyGeo": 5,
+        "english": 3,
+        "informatics": 6
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-09",
+      "name": "Ngô Minh Dương",
+      "className": "5A",
+      "birthDate": "29/05/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 6,
+        "science": 7,
+        "historyGeo": 7,
+        "english": 5,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-10",
+      "name": "Nguyễn Võ Phúc Hân",
+      "className": "5A",
+      "birthDate": "24/10/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 7,
+        "science": 9,
+        "historyGeo": 7,
+        "english": 7,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-11",
+      "name": "Trần Quang Hiếu",
+      "className": "5A",
+      "birthDate": "23/02/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 6,
+        "math": 5,
+        "science": 6,
+        "historyGeo": 6,
+        "english": 4,
+        "informatics": 7
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-12",
+      "name": "Phạm Khánh Huy",
+      "className": "5A",
+      "birthDate": "03/05/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 10,
+        "science": 9,
+        "historyGeo": 7,
+        "english": 8,
+        "informatics": 9
+      },
+      "conduct": "Khá",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-13",
+      "name": "Trịnh Thị Khánh Huyền",
+      "className": "5A",
+      "birthDate": "07/01/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 6,
+        "math": 5,
+        "science": 7,
+        "historyGeo": 6,
+        "english": 5,
+        "informatics": 8
+      },
+      "conduct": "Khá",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-14",
+      "name": "Võ Nguyên Khang",
+      "className": "5A",
+      "birthDate": "06/06/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 6,
+        "science": 7,
+        "historyGeo": 5,
+        "english": 5,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-15",
+      "name": "Lã Đăng Khoa",
+      "className": "5A",
+      "birthDate": "13/04/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 9,
+        "math": 9,
+        "science": 8,
+        "historyGeo": 9,
+        "english": 9,
+        "informatics": 10
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
       "rank": "Hoàn thành xuất sắc"
+    },
+    {
+      "id": "LVT-2015-16",
+      "name": "Nguyễn Võ Đăng Khoa",
+      "className": "5A",
+      "birthDate": "02/01/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 9,
+        "math": 10,
+        "science": 9,
+        "historyGeo": 7,
+        "english": 8,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành xuất sắc"
+    },
+    {
+      "id": "LVT-2015-17",
+      "name": "Trần Thị Kiều Linh",
+      "className": "5A",
+      "birthDate": "26/08/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 8,
+        "science": 8,
+        "historyGeo": 6,
+        "english": 8,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-18",
+      "name": "Nguyễn Công Minh",
+      "className": "5A",
+      "birthDate": "22/06/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 6,
+        "science": 7,
+        "historyGeo": 6,
+        "english": 4,
+        "informatics": 6
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-19",
+      "name": "Phan Thị Diểm My",
+      "className": "5A",
+      "birthDate": "04/08/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 8,
+        "science": 8,
+        "historyGeo": 8,
+        "english": 5,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-20",
+      "name": "Nguyễn Lê Thành Phát",
+      "className": "5A",
+      "birthDate": "07/03/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 9,
+        "science": 9,
+        "historyGeo": 6,
+        "english": 5,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-21",
+      "name": "Phạm Đình Phong",
+      "className": "5A",
+      "birthDate": "02/02/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 6,
+        "science": 8,
+        "historyGeo": 8,
+        "english": 5,
+        "informatics": 7
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-22",
+      "name": "Phạm Nguyễn Thanh Phong",
+      "className": "5A",
+      "birthDate": "11/04/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 8,
+        "science": 9,
+        "historyGeo": 8,
+        "english": 7,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-23",
+      "name": "Lê Xuân Thiện Phúc",
+      "className": "5A",
+      "birthDate": "28/04/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 5,
+        "math": 5,
+        "science": 6,
+        "historyGeo": 5,
+        "english": 5,
+        "informatics": 6
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-24",
+      "name": "Nguyễn Hồng Phượng",
+      "className": "5A",
+      "birthDate": "01/04/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 6,
+        "science": 8,
+        "historyGeo": 6,
+        "english": 5,
+        "informatics": 6
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-25",
+      "name": "Bùi Như Quỳnh",
+      "className": "5A",
+      "birthDate": "02/06/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 8,
+        "science": 9,
+        "historyGeo": 8,
+        "english": 6,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-26",
+      "name": "Đặng Như Quỳnh",
+      "className": "5A",
+      "birthDate": "18/04/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 9,
+        "science": 10,
+        "historyGeo": 9,
+        "english": 9,
+        "informatics": 10
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-27",
+      "name": "Trần Vũ Thái Sơn",
+      "className": "5A",
+      "birthDate": "07/09/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 9,
+        "math": 8,
+        "science": 9,
+        "historyGeo": 8,
+        "english": 9,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-28",
+      "name": "Võ Quỳnh Thiên",
+      "className": "5A",
+      "birthDate": "06/07/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 7,
+        "science": 9,
+        "historyGeo": 8,
+        "english": 4,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-29",
+      "name": "Nguyễn Hữu Thịnh",
+      "className": "5A",
+      "birthDate": "19/05/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 8,
+        "science": 8,
+        "historyGeo": 7,
+        "english": 5,
+        "informatics": 9
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-30",
+      "name": "Phạm Nguyễn Ngọc Thương",
+      "className": "5A",
+      "birthDate": "20/02/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 9,
+        "math": 9,
+        "science": 10,
+        "historyGeo": 7,
+        "english": 9,
+        "informatics": 10
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành xuất sắc"
+    },
+    {
+      "id": "LVT-2015-31",
+      "name": "Phạm Đình Toàn",
+      "className": "5A",
+      "birthDate": "22/12/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 6,
+        "science": 8,
+        "historyGeo": 6,
+        "english": 5,
+        "informatics": 7
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-32",
+      "name": "Trần Thị Thu Trang",
+      "className": "5A",
+      "birthDate": "09/05/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 8,
+        "math": 9,
+        "science": 8,
+        "historyGeo": 6,
+        "english": 5,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-33",
+      "name": "Nguyễn Nhật Trường",
+      "className": "5A",
+      "birthDate": "25/10/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 6,
+        "math": 6,
+        "science": 7,
+        "historyGeo": 6,
+        "english": 4,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-34",
+      "name": "Lê Hoàng Thảo Uyên",
+      "className": "5A",
+      "birthDate": "24/07/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 5,
+        "math": 5,
+        "science": 6,
+        "historyGeo": 5,
+        "english": 5,
+        "informatics": 5
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-35",
+      "name": "Nguyễn Anh Vũ",
+      "className": "5A",
+      "birthDate": "10/06/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 6,
+        "science": 8,
+        "historyGeo": 6,
+        "english": 5,
+        "informatics": 8
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
+    },
+    {
+      "id": "LVT-2015-36",
+      "name": "Võ Thị Thu Xanh",
+      "className": "5A",
+      "birthDate": "13/11/2015",
+      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "grades": {
+        "vietnamese": 7,
+        "math": 8,
+        "science": 8,
+        "historyGeo": 6,
+        "english": 5,
+        "informatics": 7
+      },
+      "conduct": "Tốt",
+      "comment": "Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.",
+      "rank": "Hoàn thành tốt"
     }
   ],
   "schedules": [
@@ -339,5 +915,5 @@
       ]
     }
   ],
-  "updatedAt": "2026-07-03T08:23:43.885Z"
+  "updatedAt": "2026-07-03T08:25:06.022Z"
 }
