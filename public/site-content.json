@@ -915,5 +915,28 @@
       ]
     }
   ],
-  "updatedAt": "2026-07-03T08:25:06.022Z"
+  "aboutLeaders": [
+    {
+      "id": "principal",
+      "name": "Cô Ngô Thị Mai",
+      "title": "Hiệu trưởng Nhà trường",
+      "avatar": "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&fm=webp&q=75&w=300",
+      "desc": "Chịu trách nhiệm chung, định hướng chiến lược và xây dựng văn hóa trường học hạnh phúc."
+    },
+    {
+      "id": "vice_principal",
+      "name": "Thầy Nguyễn Quốc Thăng",
+      "title": "Phó Hiệu trưởng",
+      "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "desc": "Phụ trách công tác chuyên môn, kiểm định chất lượng dạy học và phong trào thi đua."
+    },
+    {
+      "id": "leader_1783067146974",
+      "name": "Thầy Uông Đông Anh",
+      "title": "Giáo viên",
+      "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&fm=webp&q=75&w=200",
+      "desc": "Thầy Uông Đông Anh luôn tận tâm truyền đạt kiến thức, khơi gợi niềm đam mê học hỏi, và đồng hành cùng các em học sinh trên hành trình khám phá tri thức."
+    }
+  ],
+  "updatedAt": "2026-07-03T08:26:25.344Z"
 }
