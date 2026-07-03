@@ -931,5 +931,27 @@
       "desc": "Phụ trách công tác chuyên môn, kiểm định chất lượng dạy học và phong trào thi đua."
     }
   ],
-  "updatedAt": "2026-07-03T08:41:56.285Z"
+  "aboutMilestones": [
+    {
+      "year": "2010",
+      "title": "Thành Lập Trường",
+      "description": "Trường Tiểu học Lê Văn Tám chính thức được thành lập nhằm đáp ứng nhu cầu học tập ngày càng tăng của con em nhân dân trên địa bàn xã Pơng Drang, Tỉnh Đắk Lắk."
+    },
+    {
+      "year": "2015",
+      "title": "Xây Dựng Cơ Sở Vật Chất Mới",
+      "description": "Được sự quan tâm của chính quyền các cấp, trường hoàn thành dãy nhà 2 tầng khang trang với 12 phòng học lý thuyết và phòng chức năng hiện đại."
+    },
+    {
+      "year": "2020",
+      "title": "Đạt Chuẩn Quốc Gia Mức Độ I",
+      "description": "Nhà trường tự hào đón Bằng công nhận Trường đạt chuẩn Quốc gia mức độ I của UBND tỉnh Đắk Lắk, ghi nhận nỗ lực vượt bậc của tập thể cán bộ giáo viên."
+    },
+    {
+      "year": "2025",
+      "title": "Chuyển Đổi Số Giáo Dục",
+      "description": "Tiên phong ứng dụng công nghệ giáo dục số, phòng tin học hiện đại hóa và trang bị học cụ tương tác thông minh cho 100% các lớp học."
+    }
+  ],
+  "updatedAt": "2026-07-03T08:44:00.208Z"
 }
