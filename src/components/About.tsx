@@ -2,6 +2,7 @@ import { Award, BookOpen, GraduationCap, Heart, Milestone, Users, Edit, Plus, Tr
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
+import { loadSiteContent, patchSiteContent } from "../siteContentSync";
 
 interface AboutProps {
   isAdminMode: boolean;
@@ -92,13 +93,7 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   useEffect(() => {
     let isMounted = true;
 
-    fetch("/api/site-content")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Khong the tai noi dung gioi thieu.");
-        }
-        return response.json();
-      })
+    loadSiteContent()
       .then((content) => {
         if (!isMounted) return;
         if (content.aboutMilestones) {
@@ -125,13 +120,7 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   const saveSiteContent = (content: Record<string, unknown>) => {
     if (!hasLoadedSiteContent) return;
 
-    fetch("/api/site-content", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(content),
-    }).catch((error) => {
+    patchSiteContent(content).catch((error) => {
       console.warn("About content sync failed:", error);
     });
   };

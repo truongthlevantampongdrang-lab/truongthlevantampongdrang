@@ -2,6 +2,7 @@ import { useState, FormEvent, useEffect, ChangeEvent, DragEvent } from "react";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
 import * as XLSX from "xlsx";
+import { loadSiteContent, patchSiteContent } from "../siteContentSync";
 
 // Helper to parse Class and Teacher from "Lớp 5A - GVCN: Thầy Lê Anh Tuấn"
 export function parseClassAndTeacher(fullClassName: string) {
@@ -38,6 +39,7 @@ interface PortalProps {
 }
 
 export default function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
+  const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"grades" | "schedule" | "clubs" | "teachers">("grades");
 
   // Grades Search States
@@ -66,7 +68,8 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
 
   useEffect(() => {
     localStorage.setItem("lvt_teachers", JSON.stringify(teachers));
-  }, [teachers]);
+    saveSiteContent({ teachers });
+  }, [teachers, hasLoadedSiteContent]);
 
   // Synchronize selectedScheduleClass when schedules change or if the class is deleted
   useEffect(() => {
@@ -184,15 +187,18 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
 
   useEffect(() => {
     localStorage.setItem("lvt_admission_registrations", JSON.stringify(registrations));
-  }, [registrations]);
+    saveSiteContent({ admissionRegistrations: registrations });
+  }, [registrations, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_admission_instructions", admissionInstructions);
-  }, [admissionInstructions]);
+    saveSiteContent({ admissionInstructions });
+  }, [admissionInstructions, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_realtime_qa_messages", JSON.stringify(qaMessages));
-  }, [qaMessages]);
+    saveSiteContent({ realtimeQaMessages: qaMessages });
+  }, [qaMessages, hasLoadedSiteContent]);
 
   // --- CMS MODALS STATES ---
   // Student Modal
@@ -242,7 +248,52 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
 
   useEffect(() => {
     localStorage.setItem("lvt_added_lookup_classes", JSON.stringify(addedLookupClasses));
-  }, [addedLookupClasses]);
+    saveSiteContent({ addedLookupClasses });
+  }, [addedLookupClasses, hasLoadedSiteContent]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadSiteContent()
+      .then((content) => {
+        if (!isMounted) return;
+        if (content.teachers) {
+          setTeachers(content.teachers as string[]);
+        }
+        if (content.admissionRegistrations) {
+          setRegistrations(content.admissionRegistrations as ClubRegistration[]);
+        }
+        if (content.admissionInstructions) {
+          setAdmissionInstructions(String(content.admissionInstructions));
+        }
+        if (content.realtimeQaMessages) {
+          setQaMessages(content.realtimeQaMessages as { role: "parent" | "school"; content: string; time: string }[]);
+        }
+        if (content.addedLookupClasses) {
+          setAddedLookupClasses(content.addedLookupClasses as string[]);
+        }
+      })
+      .catch((error) => {
+        console.warn("Portal content sync skipped:", error);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setHasLoadedSiteContent(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const saveSiteContent = (content: Record<string, unknown>) => {
+    if (!hasLoadedSiteContent) return;
+
+    patchSiteContent(content).catch((error) => {
+      console.warn("Portal content sync failed:", error);
+    });
+  };
 
   const [showAddLookupClassModal, setShowAddLookupClassModal] = useState(false);
   const [newLookupClassName, setNewLookupClassName] = useState("");

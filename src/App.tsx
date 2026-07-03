@@ -16,6 +16,7 @@ import {
   upsertLink,
   upsertMeta
 } from "./seo";
+import { getGitHubPublishToken, loadSiteContent, patchSiteContent, setGitHubPublishToken } from "./siteContentSync";
 
 const About = lazy(() => import("./components/About"));
 const News = lazy(() => import("./components/News"));
@@ -120,6 +121,7 @@ export default function App() {
   const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
     return localStorage.getItem("lvt_gemini_api_key") || "";
   });
+  const [githubPublishToken, setGithubPublishToken] = useState<string>(() => getGitHubPublishToken());
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
 
   // Floating Admin Login & Options States
@@ -311,13 +313,7 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    fetch("/api/site-content")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Khong the tai noi dung website.");
-        }
-        return response.json();
-      })
+    loadSiteContent()
       .then((content) => {
         if (!isMounted) return;
         if (content.schoolInfo) {
@@ -325,6 +321,18 @@ export default function App() {
         }
         if (content.footerInfo) {
           setFooterInfo(content.footerInfo);
+        }
+        if (content.news) {
+          setNews(content.news as NewsItem[]);
+        }
+        if (content.clubs) {
+          setClubs(content.clubs as SchoolClub[]);
+        }
+        if (content.students) {
+          setStudents(content.students as StudentScore[]);
+        }
+        if (content.schedules) {
+          setSchedules(content.schedules as ClassSchedule[]);
         }
       })
       .catch((error) => {
@@ -344,13 +352,7 @@ export default function App() {
   const saveSiteContent = (content: Record<string, unknown>) => {
     if (!hasLoadedSiteContent) return;
 
-    fetch("/api/site-content", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(content),
-    }).catch((error) => {
+    patchSiteContent(content).catch((error) => {
       console.warn("Site content sync failed:", error);
     });
   };
@@ -367,19 +369,23 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("lvt_news", JSON.stringify(news));
-  }, [news]);
+    saveSiteContent({ news });
+  }, [news, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_clubs", JSON.stringify(clubs));
-  }, [clubs]);
+    saveSiteContent({ clubs });
+  }, [clubs, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_students", JSON.stringify(students));
-  }, [students]);
+    saveSiteContent({ students });
+  }, [students, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_schedules", JSON.stringify(schedules));
-  }, [schedules]);
+    saveSiteContent({ schedules });
+  }, [schedules, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_footer_info", JSON.stringify(footerInfo));
@@ -415,6 +421,7 @@ export default function App() {
     setCurrentUsername("");
     setCurrentPassword("");
     setGeminiApiKey(localStorage.getItem("lvt_gemini_api_key") || "");
+    setGithubPublishToken(getGitHubPublishToken());
     setShowChangeCredsModal(true);
   };
 
@@ -460,6 +467,10 @@ export default function App() {
     localStorage.setItem("lvt_admin_username", newUsername.trim());
     localStorage.setItem("lvt_admin_password", newPassword);
     localStorage.setItem("lvt_gemini_api_key", geminiApiKey.trim());
+    setGitHubPublishToken(githubPublishToken);
+    patchSiteContent({ schoolInfo, footerInfo, news, clubs, students, schedules }).catch((error) => {
+      console.warn("Initial GitHub content publish failed:", error);
+    });
 
     setCredsSuccess("Cấu hình tài khoản & Khoá API thành công!");
 
@@ -829,6 +840,28 @@ export default function App() {
                     onChange={(e) => setGeminiApiKey(e.target.value)}
                     placeholder="Dán mã khóa AIzaSy... của bạn tại đây"
                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-blue-50/40 p-3 border border-blue-100/60 space-y-2 mt-2">
+                <h4 className="text-[11px] font-bold text-blue-800 uppercase tracking-wider flex items-center space-x-1">
+                  <Settings className="h-3 w-3 text-blue-600" />
+                  <span>Đồng bộ nội dung lên GitHub Pages</span>
+                </h4>
+                <p className="text-[10px] text-slate-500 leading-normal">
+                  Dán GitHub token có quyền Contents: Read and write để các nội dung quản trị được xuất bản cho mọi thiết bị.
+                </p>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">
+                    GitHub Publish Token
+                  </label>
+                  <input
+                    type="password"
+                    value={githubPublishToken}
+                    onChange={(e) => setGithubPublishToken(e.target.value)}
+                    placeholder="Dán token github_pat... hoặc ghp..."
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
