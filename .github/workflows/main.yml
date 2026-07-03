@@ -37,7 +37,8 @@ jobs:
           VITE_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Create runtime config
-        run: node -e "const fs=require('fs'); const key=process.env.GEMINI_API_KEY || ''; if (!key) { throw new Error('Missing GitHub secret GEMINI_API_KEY'); } fs.writeFileSync('dist/runtime-config.json', JSON.stringify({ geminiApiKey: key }));"
+        run: |
+          node -e "const fs=require('fs'); const key=process.env.GEMINI_API_KEY || ''; if (!key) { throw new Error('Missing GitHub secret GEMINI_API_KEY'); } fs.writeFileSync('dist/runtime-config.json', JSON.stringify({ geminiApiKey: key }));"
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
