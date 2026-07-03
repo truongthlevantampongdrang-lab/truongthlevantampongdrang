@@ -22,6 +22,71 @@ const News = lazy(() => import("./components/News"));
 const Portal = lazy(() => import("./components/Portal"));
 const Assistant = lazy(() => import("./components/Assistant"));
 
+declare const __APP_BUILD_ID__: string;
+
+const contentCacheVersionKey = "lvt_content_cache_version";
+const contentCacheKeys = [
+  "lvt_school_info",
+  "lvt_footer_info",
+  "lvt_news",
+  "lvt_clubs",
+  "lvt_students",
+  "lvt_schedules",
+  "lvt_about_milestones",
+  "lvt_about_leaders",
+  "lvt_teachers",
+  "lvt_added_lookup_classes",
+  "lvt_admission_instructions",
+];
+
+const syncContentCacheVersion = () => {
+  const currentVersion = typeof __APP_BUILD_ID__ === "string" ? __APP_BUILD_ID__ : "dev";
+  const savedVersion = localStorage.getItem(contentCacheVersionKey);
+
+  if (savedVersion === currentVersion) {
+    return;
+  }
+
+  contentCacheKeys.forEach((key) => localStorage.removeItem(key));
+  localStorage.setItem(contentCacheVersionKey, currentVersion);
+};
+
+const currentPrincipal = {
+  name: "Cô Ngô Thị Mai",
+  title: "Hiệu trưởng Nhà trường",
+  avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&fm=webp&q=75&w=300",
+};
+
+const isOldPrincipalName = (value: unknown) => {
+  const text = String(value || "").toLowerCase();
+  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  return (
+    normalized.includes("nguyen thi xuan") ||
+    text.includes("nguyá") ||
+    text.includes("xuân") ||
+    text.includes("xuã¢n") ||
+    text.includes("xuÃ¢n")
+  );
+};
+
+const normalizeSchoolInfo = (info: any) => {
+  if (!info || typeof info !== "object") {
+    return info;
+  }
+
+  if (!isOldPrincipalName(info.principalName)) {
+    return info;
+  }
+
+  return {
+    ...info,
+    principalName: currentPrincipal.name,
+    principalTitle: info.principalTitle || currentPrincipal.title,
+    principalAvatar: info.principalAvatar || currentPrincipal.avatar,
+  };
+};
+
 function getInitialTab() {
   const redirectPath = new URLSearchParams(window.location.search).get("p");
   if (redirectPath) {
@@ -32,6 +97,8 @@ function getInitialTab() {
 }
 
 export default function App() {
+  syncContentCacheVersion();
+
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("lvt_is_admin");
@@ -155,7 +222,7 @@ export default function App() {
     const saved = localStorage.getItem("lvt_school_info");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        return normalizeSchoolInfo(JSON.parse(saved));
       } catch (e) {
         // use default
       }
@@ -167,10 +234,10 @@ export default function App() {
       fullAddress: "Buôn Ea Đơng, Xã Pơng Drang, Tỉnh Đắk Lắk, Việt Nam",
       phone: "0262.387.1234 (Văn phòng Nhà trường)",
       email: "truongthlevantampongdrang@gmail.com",
-      principalName: "Cô Ngô Thị Mai",
-      principalTitle: "Hiệu trưởng Nhà trường",
+      principalName: currentPrincipal.name,
+      principalTitle: currentPrincipal.title,
       principalWord: "Tại Trường Tiểu học Lê Văn Tám xã Pơng Drang, chúng tôi tin tưởng sâu sắc rằng mỗi đứa trẻ đều sở hữu những năng lực tiềm ẩn riêng biệt. Sứ mệnh của tập thể sư phạm nhà trường là truyền lửa đam mê học hỏi, bồi đắp lòng nhân ái, lòng yêu quê hương Tây Nguyên và chuẩn bị cho các em những hành trang vững vàng nhất bước vào tương lai. Chúng tôi cam kết mang tới một môi trường dạy học chất lượng, an toàn, tràn ngập tình yêu thương và tôn trọng sự khác biệt.",
-      principalAvatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&fm=webp&q=75&w=300"
+      principalAvatar: currentPrincipal.avatar
     };
   });
 
@@ -254,7 +321,7 @@ export default function App() {
       .then((content) => {
         if (!isMounted) return;
         if (content.schoolInfo) {
-          setSchoolInfo(content.schoolInfo);
+          setSchoolInfo(normalizeSchoolInfo(content.schoolInfo));
         }
         if (content.footerInfo) {
           setFooterInfo(content.footerInfo);

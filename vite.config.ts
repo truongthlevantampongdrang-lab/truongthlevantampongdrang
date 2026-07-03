@@ -4,9 +4,14 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const buildId = new Date().toISOString();
+
   return {
     base: '/truongthlevantampongdrang/',
     plugins: [react(), tailwindcss()],
+    define: {
+      __APP_BUILD_ID__: JSON.stringify(buildId),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
