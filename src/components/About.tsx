@@ -19,6 +19,12 @@ type LeaderDescriptionItem = {
   desc?: string;
 };
 
+const GEMINI_TEXT_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+];
+
 export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
 
@@ -313,42 +319,51 @@ Chi tra ve JSON hop le, la mot mang object co dung cac truong: name, title, desc
 Danh sach:
 ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json"
+    const payload = {
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }]
         }
-      })
-    });
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        responseMimeType: "application/json"
+      }
+    };
+    const errors: string[] = [];
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `Gemini tra ve loi HTTP ${response.status}`);
+    for (const model of GEMINI_TEXT_MODELS) {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        errors.push(`${model}: ${errorData.error?.message || `Gemini tra ve loi HTTP ${response.status}`}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        errors.push(`${model}: Khong nhan duoc noi dung tu Gemini.`);
+        continue;
+      }
+
+      const leaders = parseLeaderDescriptions(text);
+      if (leaders.length > 0) {
+        return leaders;
+      }
+
+      errors.push(`${model}: Gemini khong tra ve mo ta hop le.`);
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error("Khong nhan duoc noi dung tu Gemini.");
-    }
-
-    const leaders = parseLeaderDescriptions(text);
-    if (leaders.length === 0) {
-      throw new Error("Gemini khong tra ve mo ta hop le.");
-    }
-
-    return leaders;
+    throw new Error(errors.join(" | ") || "Khong the ket noi Gemini.");
   };
 
   const generateLeaderDescriptions = async (items: LeaderDescriptionItem[]) => {

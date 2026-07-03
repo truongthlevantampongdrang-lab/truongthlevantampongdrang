@@ -14,14 +14,18 @@ Nhiệm vụ của bạn:
 Lưu ý: Luôn trả lời bằng tiếng Việt lịch sự, truyền cảm hứng học tập và tràn đầy năng lượng tích cực của mái trường tiểu học. Giữ câu trả lời súc tích, dễ đọc bằng cách xuống dòng và dùng định dạng markdown đơn giản.
 `;
 
+const GEMINI_TEXT_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+];
+
 const callGeminiDirectly = async (messages: ChatMessage[], apiKey: string) => {
   const contents = messages.map(m => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }]
   }));
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  
   const payload = {
     contents,
     systemInstruction: {
@@ -33,25 +37,34 @@ const callGeminiDirectly = async (messages: ChatMessage[], apiKey: string) => {
     }
   };
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload)
-  });
+  const errors: string[] = [];
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `HTTP error ${response.status}`);
+  for (const model of GEMINI_TEXT_MODELS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      errors.push(`${model}: ${errorData.error?.message || `HTTP error ${response.status}`}`);
+      continue;
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) {
+      return text;
+    }
+
+    errors.push(`${model}: Khong nhan duoc cau tra loi tu may chu Gemini.`);
   }
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error("Không nhận được câu trả lời từ máy chủ Gemini.");
-  }
-  return text;
+  throw new Error(errors.join(" | ") || "Khong the ket noi Gemini.");
 };
 
 export default function Assistant() {

@@ -76,6 +76,12 @@ Nhiệm vụ của bạn:
 Lưu ý: Luôn trả lời bằng tiếng Việt lịch sự, truyền cảm hứng học tập và tràn đầy năng lượng tích cực của mái trường tiểu học. Giữ câu trả lời súc tích, dễ đọc bằng cách xuống dòng và dùng định dạng markdown đơn giản.
 `;
 
+const GEMINI_TEXT_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+];
+
 // API endpoint for AI assistant chat
 app.post("/api/assistant", async (req, res) => {
   try {
@@ -91,33 +97,41 @@ app.post("/api/assistant", async (req, res) => {
       });
     }
 
-    // Format chat messages for @google/genai SDK
-    // The chats.create takes a model and config, and sendMessage sends a message.
-    // For single turn or keeping history, we can initialize a chat.
-    // Let's create a chat session with history
-    const chat = ai.chats.create({
-      model: "gemini-3.5-flash",
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.7,
-      },
-      // Note: we can pass previous history to chats.create, but format it appropriately
-      // Let's map history from the client to the format required: { role: 'user' | 'model', parts: [{ text: '...' }] }
-      history: messages.slice(0, -1).map(m => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }]
-      }))
-    });
-
     const lastMessage = messages[messages.length - 1];
-    const response = await chat.sendMessage({
-      message: lastMessage.content
-    });
+    const errors: string[] = [];
 
-    return res.json({
-      role: "assistant",
-      content: response.text || "Xin lỗi, tôi chưa hiểu ý của bạn. Hãy nói lại rõ hơn nhé!"
-    });
+    for (const model of GEMINI_TEXT_MODELS) {
+      try {
+        const chat = ai.chats.create({
+          model,
+          config: {
+            systemInstruction: systemInstruction,
+            temperature: 0.7,
+          },
+          history: messages.slice(0, -1).map(m => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }]
+          }))
+        });
+
+        const response = await chat.sendMessage({
+          message: lastMessage.content
+        });
+
+        if (response.text) {
+          return res.json({
+            role: "assistant",
+            content: response.text
+          });
+        }
+
+        errors.push(`${model}: Khong nhan duoc cau tra loi tu Gemini.`);
+      } catch (modelError: any) {
+        errors.push(`${model}: ${modelError.message || "Loi khong xac dinh."}`);
+      }
+    }
+
+    throw new Error(errors.join(" | "));
 
   } catch (error: any) {
     console.error("AI Assistant Error:", error);
