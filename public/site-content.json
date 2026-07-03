@@ -199,56 +199,6 @@
   ],
   "schedules": [
     {
-      "className": "Lớp 1A - GVCN: Cô Nguyễn Thị Hà",
-      "days": [
-        {
-          "day": "Thứ 2",
-          "subjects": [
-            "Chào cờ",
-            "Tiếng Việt",
-            "Tiếng Việt",
-            "Toán"
-          ]
-        },
-        {
-          "day": "Thứ 3",
-          "subjects": [
-            "Đạo đức",
-            "Tiếng Việt",
-            "Toán",
-            "Mỹ thuật"
-          ]
-        },
-        {
-          "day": "Thứ 4",
-          "subjects": [
-            "Tiếng Việt",
-            "Tiếng Việt",
-            "Tự nhiên Xã hội",
-            "Thể dục"
-          ]
-        },
-        {
-          "day": "Thứ 5",
-          "subjects": [
-            "Toán",
-            "Tiếng Việt",
-            "Âm nhạc",
-            "Tiếng Anh"
-          ]
-        },
-        {
-          "day": "Thứ 6",
-          "subjects": [
-            "Tiếng Việt",
-            "Hoạt động trải nghiệm",
-            "Thể dục",
-            "Sinh hoạt lớp"
-          ]
-        }
-      ]
-    },
-    {
       "className": "Lớp 4A - GVCN: Cô H'Nghia Niê",
       "days": [
         {
@@ -257,7 +207,11 @@
             "Chào cờ",
             "Toán",
             "Tiếng Việt",
-            "Lịch sử & Địa lý"
+            "Lịch sử & Địa lý",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -266,7 +220,11 @@
             "Tiếng Việt",
             "Tiếng Việt",
             "Khoa học",
-            "Tiếng Anh"
+            "Tiếng Anh",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -275,7 +233,11 @@
             "Toán",
             "Đạo đức",
             "Tin học",
-            "Thể dục"
+            "Thể dục",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -284,7 +246,11 @@
             "Tiếng Việt",
             "Toán",
             "Công nghệ",
-            "Tiếng Anh"
+            "Tiếng Anh",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -293,7 +259,11 @@
             "Khoa học",
             "Mỹ thuật",
             "Âm nhạc",
-            "Sinh hoạt lớp"
+            "Sinh hoạt lớp",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         }
       ]
@@ -307,7 +277,11 @@
             "Chào cờ",
             "Toán",
             "Tiếng Việt",
-            "Lịch sử & Địa lý"
+            "Lịch sử & Địa lý",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -316,7 +290,11 @@
             "Tiếng Việt",
             "Toán",
             "Khoa học",
-            "Tiếng Anh"
+            "Tiếng Anh",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -325,7 +303,11 @@
             "Toán",
             "Tiếng Việt",
             "Tin học",
-            "Thể dục"
+            "Thể dục",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -334,7 +316,11 @@
             "Tiếng Việt",
             "Toán",
             "Kỹ thuật",
-            "Tiếng Anh"
+            "Tiếng Anh",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         },
         {
@@ -343,11 +329,15 @@
             "Lịch sử & Địa lý",
             "Mỹ thuật",
             "Âm nhạc",
-            "Sinh hoạt lớp"
+            "Sinh hoạt lớp",
+            "Hoạt động TN",
+            "Tự học",
+            "Thể dục",
+            "CLB Tự chọn"
           ]
         }
       ]
     }
   ],
-  "updatedAt": "2026-07-03T08:22:36.827Z"
+  "updatedAt": "2026-07-03T08:23:43.885Z"
 }
