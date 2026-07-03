@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "../types";
+import { getSharedGeminiApiKey } from "../geminiConfig";
 import { Send, Sparkles, User, GraduationCap, AlertCircle, RefreshCw, Star, Heart, CheckCircle2 } from "lucide-react";
 
 const systemInstruction = `
@@ -110,8 +111,7 @@ export default function Assistant() {
     setIsLoading(true);
     setErrorText("");
 
-    // @ts-ignore
-    const clientApiKey = (import.meta.env?.VITE_GEMINI_API_KEY as string) || localStorage.getItem("lvt_gemini_api_key") || "";
+    const clientApiKey = await getSharedGeminiApiKey();
 
     try {
       let success = false;

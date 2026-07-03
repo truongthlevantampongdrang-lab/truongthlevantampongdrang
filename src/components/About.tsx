@@ -2,6 +2,7 @@ import { Award, BookOpen, GraduationCap, Heart, Milestone, Users, Edit, Plus, Tr
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
+import { getSharedGeminiApiKey } from "../geminiConfig";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
 
 interface AboutProps {
@@ -301,13 +302,8 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
       .filter((item) => item.name && item.title && item.desc);
   };
 
-  const getClientGeminiApiKey = () => {
-    // @ts-ignore
-    return (import.meta.env?.VITE_GEMINI_API_KEY as string) || localStorage.getItem("lvt_gemini_api_key") || "";
-  };
-
   const callGeminiForLeaderDescriptions = async (items: LeaderDescriptionItem[]) => {
-    const apiKey = getClientGeminiApiKey();
+    const apiKey = await getSharedGeminiApiKey();
     if (!apiKey) {
       throw new Error("Chua cau hinh khoa Gemini API. Vui long vao Quan tri vien -> Doi mat khau/Ten dang nhap va dien Khoa API Gemini.");
     }
@@ -388,13 +384,13 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
         return data.leaders as LeaderDescriptionItem[];
       }
 
-      if (getClientGeminiApiKey()) {
+      if (await getSharedGeminiApiKey()) {
         return await callGeminiForLeaderDescriptions(items);
       }
 
       throw new Error(data.error || "Khong the tao mo ta bang AI.");
     } catch (err: any) {
-      if (getClientGeminiApiKey() && !String(err?.message || "").includes("Gemini")) {
+      if ((await getSharedGeminiApiKey()) && !String(err?.message || "").includes("Gemini")) {
         return await callGeminiForLeaderDescriptions(items);
       }
       throw err;
