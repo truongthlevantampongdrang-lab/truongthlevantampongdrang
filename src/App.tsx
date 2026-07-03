@@ -53,6 +53,7 @@ export default function App() {
   const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
     return localStorage.getItem("lvt_gemini_api_key") || "";
   });
+  const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
 
   // Floating Admin Login & Options States
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
@@ -166,7 +167,7 @@ export default function App() {
       fullAddress: "Buôn Ea Đơng, Xã Pơng Drang, Tỉnh Đắk Lắk, Việt Nam",
       phone: "0262.387.1234 (Văn phòng Nhà trường)",
       email: "truongthlevantampongdrang@gmail.com",
-      principalName: "Cô Nguyễn Thị Xuân",
+      principalName: "Cô Ngô Thị Mai",
       principalTitle: "Hiệu trưởng Nhà trường",
       principalWord: "Tại Trường Tiểu học Lê Văn Tám xã Pơng Drang, chúng tôi tin tưởng sâu sắc rằng mỗi đứa trẻ đều sở hữu những năng lực tiềm ẩn riêng biệt. Sứ mệnh của tập thể sư phạm nhà trường là truyền lửa đam mê học hỏi, bồi đắp lòng nhân ái, lòng yêu quê hương Tây Nguyên và chuẩn bị cho các em những hành trang vững vàng nhất bước vào tương lai. Chúng tôi cam kết mang tới một môi trường dạy học chất lượng, an toàn, tràn ngập tình yêu thương và tôn trọng sự khác biệt.",
       principalAvatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&fm=webp&q=75&w=300"
@@ -240,6 +241,53 @@ export default function App() {
     return classSchedules;
   });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch("/api/site-content")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Khong the tai noi dung website.");
+        }
+        return response.json();
+      })
+      .then((content) => {
+        if (!isMounted) return;
+        if (content.schoolInfo) {
+          setSchoolInfo(content.schoolInfo);
+        }
+        if (content.footerInfo) {
+          setFooterInfo(content.footerInfo);
+        }
+      })
+      .catch((error) => {
+        console.warn("Site content sync skipped:", error);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setHasLoadedSiteContent(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const saveSiteContent = (content: Record<string, unknown>) => {
+    if (!hasLoadedSiteContent) return;
+
+    fetch("/api/site-content", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(content),
+    }).catch((error) => {
+      console.warn("Site content sync failed:", error);
+    });
+  };
+
   // Sync to localStorage
   useEffect(() => {
     localStorage.setItem("lvt_is_admin", String(isAdminMode));
@@ -247,7 +295,8 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("lvt_school_info", JSON.stringify(schoolInfo));
-  }, [schoolInfo]);
+    saveSiteContent({ schoolInfo });
+  }, [schoolInfo, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_news", JSON.stringify(news));
@@ -267,7 +316,8 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("lvt_footer_info", JSON.stringify(footerInfo));
-  }, [footerInfo]);
+    saveSiteContent({ footerInfo });
+  }, [footerInfo, hasLoadedSiteContent]);
 
   // Handle updates from components
   const updateSchoolInfo = (info: typeof schoolInfo) => setSchoolInfo(info);
@@ -479,6 +529,7 @@ export default function App() {
         return (
           <About
             isAdminMode={isAdminMode}
+            schoolInfo={schoolInfo}
           />
         );
       case "news":

@@ -51,6 +51,10 @@ export interface ClubRegistration {
   clubId: string;
   notes: string;
   registeredAt: string;
+  birthDate?: string;
+  gender?: string;
+  address?: string;
+  status?: string;
 }
 
 export interface ScheduleDay {
@@ -62,4 +66,3 @@ export interface ClassSchedule {
   className: string;
   days: ScheduleDay[];
 }
-

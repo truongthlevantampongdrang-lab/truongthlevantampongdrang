@@ -5,9 +5,22 @@ import mammoth from "mammoth";
 
 interface AboutProps {
   isAdminMode: boolean;
+  schoolInfo: {
+    principalName: string;
+    principalTitle: string;
+    principalAvatar: string;
+  };
 }
 
-export default function About({ isAdminMode }: AboutProps) {
+type LeaderDescriptionItem = {
+  name: string;
+  title: string;
+  desc?: string;
+};
+
+export default function About({ isAdminMode, schoolInfo }: AboutProps) {
+  const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
+
   // Load / Save Milestones locally
   const [milestones, setMilestones] = useState(() => {
     const saved = localStorage.getItem("lvt_about_milestones");
@@ -51,7 +64,7 @@ export default function About({ isAdminMode }: AboutProps) {
     return [
       {
         id: "principal",
-        name: "Cô Nguyễn Thị Xuân",
+        name: "Cô Ngô Thị Mai",
         title: "Hiệu trưởng",
         avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&fm=webp&q=75&w=200",
         desc: "Chịu trách nhiệm chung, định hướng chiến lược và xây dựng văn hóa trường học hạnh phúc."
@@ -68,11 +81,98 @@ export default function About({ isAdminMode }: AboutProps) {
 
   useEffect(() => {
     localStorage.setItem("lvt_about_milestones", JSON.stringify(milestones));
-  }, [milestones]);
+    saveSiteContent({ aboutMilestones: milestones });
+  }, [milestones, hasLoadedSiteContent]);
 
   useEffect(() => {
     localStorage.setItem("lvt_about_leaders", JSON.stringify(leaders));
-  }, [leaders]);
+    saveSiteContent({ aboutLeaders: leaders });
+  }, [leaders, hasLoadedSiteContent]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch("/api/site-content")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Khong the tai noi dung gioi thieu.");
+        }
+        return response.json();
+      })
+      .then((content) => {
+        if (!isMounted) return;
+        if (content.aboutMilestones) {
+          setMilestones(content.aboutMilestones);
+        }
+        if (content.aboutLeaders) {
+          setLeaders(content.aboutLeaders);
+        }
+      })
+      .catch((error) => {
+        console.warn("About content sync skipped:", error);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setHasLoadedSiteContent(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const saveSiteContent = (content: Record<string, unknown>) => {
+    if (!hasLoadedSiteContent) return;
+
+    fetch("/api/site-content", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(content),
+    }).catch((error) => {
+      console.warn("About content sync failed:", error);
+    });
+  };
+
+  useEffect(() => {
+    setLeaders((currentLeaders: any[]) => {
+      const principalIndex = currentLeaders.findIndex((leader: any) => {
+        const title = String(leader.title || "").toLocaleLowerCase("vi-VN");
+        return leader.id === "principal" || (title.includes("hiệu trưởng") && !title.includes("phó"));
+      });
+
+      const existingPrincipal = principalIndex >= 0 ? currentLeaders[principalIndex] : undefined;
+      const syncedPrincipal = {
+        ...(existingPrincipal || {
+          id: "principal",
+          desc: "Chịu trách nhiệm chung, định hướng chiến lược và xây dựng văn hóa trường học hạnh phúc."
+        }),
+        id: existingPrincipal?.id || "principal",
+        name: schoolInfo.principalName,
+        title: schoolInfo.principalTitle,
+        avatar: schoolInfo.principalAvatar
+      };
+
+      if (
+        existingPrincipal &&
+        existingPrincipal.name === syncedPrincipal.name &&
+        existingPrincipal.title === syncedPrincipal.title &&
+        existingPrincipal.avatar === syncedPrincipal.avatar
+      ) {
+        return currentLeaders;
+      }
+
+      if (principalIndex < 0) {
+        return [syncedPrincipal, ...currentLeaders];
+      }
+
+      const updated = [...currentLeaders];
+      updated[principalIndex] = syncedPrincipal;
+      return updated;
+    });
+  }, [schoolInfo.principalName, schoolInfo.principalTitle, schoolInfo.principalAvatar, hasLoadedSiteContent]);
 
   // Editing state
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
@@ -184,6 +284,119 @@ export default function About({ isAdminMode }: AboutProps) {
     setShowLeaderModal(false);
   };
 
+  const parseLeaderDescriptions = (rawText: string): LeaderDescriptionItem[] => {
+    const cleaned = rawText
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed)) {
+      throw new Error("Phan hoi AI khong dung dinh dang danh sach.");
+    }
+
+    return parsed
+      .map((item) => ({
+        name: String(item.name || "").trim(),
+        title: String(item.title || "").trim(),
+        desc: String(item.desc || "").trim(),
+      }))
+      .filter((item) => item.name && item.title && item.desc);
+  };
+
+  const getClientGeminiApiKey = () => {
+    // @ts-ignore
+    return (import.meta.env?.VITE_GEMINI_API_KEY as string) || localStorage.getItem("lvt_gemini_api_key") || "";
+  };
+
+  const callGeminiForLeaderDescriptions = async (items: LeaderDescriptionItem[]) => {
+    const apiKey = getClientGeminiApiKey();
+    if (!apiKey) {
+      throw new Error("Chua cau hinh khoa Gemini API. Vui long vao Quan tri vien -> Doi mat khau/Ten dang nhap va dien Khoa API Gemini.");
+    }
+
+    const prompt = `Ban la tro ly viet noi dung website cho Truong Tieu hoc Le Van Tam.
+Hay viet truong "desc" cho tung nhan su duoi day bang tieng Viet, lich su, am ap, ngan gon 15-25 tu, phu hop dang tren website nha truong.
+Chi tra ve JSON hop le, la mot mang object co dung cac truong: name, title, desc.
+
+Danh sach:
+${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json"
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `Gemini tra ve loi HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error("Khong nhan duoc noi dung tu Gemini.");
+    }
+
+    const leaders = parseLeaderDescriptions(text);
+    if (leaders.length === 0) {
+      throw new Error("Gemini khong tra ve mo ta hop le.");
+    }
+
+    return leaders;
+  };
+
+  const generateLeaderDescriptions = async (items: LeaderDescriptionItem[]) => {
+    try {
+      const response = await fetch("/api/generate-leader-descriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          items: items.map(({ name, title }) => ({ name, title }))
+        })
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        return await callGeminiForLeaderDescriptions(items);
+      }
+
+      const data = await response.json();
+      if (response.ok && data.success && data.leaders) {
+        return data.leaders as LeaderDescriptionItem[];
+      }
+
+      if (getClientGeminiApiKey()) {
+        return await callGeminiForLeaderDescriptions(items);
+      }
+
+      throw new Error(data.error || "Khong the tao mo ta bang AI.");
+    } catch (err: any) {
+      if (getClientGeminiApiKey() && !String(err?.message || "").includes("Gemini")) {
+        return await callGeminiForLeaderDescriptions(items);
+      }
+      throw err;
+    }
+  };
+
   const handleGenerateSingleDescription = async () => {
     if (!leaderForm.name || !leaderForm.title) {
       alert("Vui lòng nhập Họ tên và Chức vụ trước khi soạn bằng AI!");
@@ -192,21 +405,11 @@ export default function About({ isAdminMode }: AboutProps) {
 
     setIsGeneratingSingle(true);
     try {
-      const response = await fetch("/api/generate-leader-descriptions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          items: [{ name: leaderForm.name, title: leaderForm.title }]
-        })
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success && data.leaders && data.leaders[0]) {
-        setLeaderForm(prev => ({ ...prev, desc: data.leaders[0].desc }));
+      const generatedLeaders = await generateLeaderDescriptions([{ name: leaderForm.name, title: leaderForm.title }]);
+      if (generatedLeaders[0]?.desc) {
+        setLeaderForm(prev => ({ ...prev, desc: generatedLeaders[0].desc || "" }));
       } else {
-        throw new Error(data.error || "Không thể tạo mô tả bằng AI.");
+        throw new Error("Không thể tạo mô tả bằng AI.");
       }
     } catch (err: any) {
       alert("Lỗi AI: " + err.message);
@@ -343,23 +546,13 @@ export default function About({ isAdminMode }: AboutProps) {
     setImportError(null);
 
     try {
-      const response = await fetch("/api/generate-leader-descriptions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          items: selectedItems.map(item => ({ name: item.name, title: item.title }))
-        })
-      });
+      const generatedLeaders = await generateLeaderDescriptions(selectedItems.map(item => ({
+        name: item.name,
+        title: item.title
+      })));
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Gặp sự cố khi kết nối đến máy chủ AI.");
-      }
-
-      if (data.success && data.leaders) {
-        const newLeaders = data.leaders.map((leader: any, index: number) => ({
+      if (generatedLeaders.length > 0) {
+        const newLeaders = generatedLeaders.map((leader: any, index: number) => ({
           id: "leader_bulk_" + Date.now() + "_" + index,
           name: leader.name,
           title: leader.title,

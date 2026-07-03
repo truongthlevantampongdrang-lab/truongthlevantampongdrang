@@ -1,6 +1,6 @@
 import { useState, FormEvent, useEffect, ChangeEvent, DragEvent } from "react";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
-import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info } from "lucide-react";
+import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
 import * as XLSX from "xlsx";
 
 // Helper to parse Class and Teacher from "Lớp 5A - GVCN: Thầy Lê Anh Tuấn"
@@ -135,17 +135,64 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     }
   }, [selectedScheduleClass]);
 
-  // Club Registration States
+  // Admission Registration States
+  const defaultAdmissionInstructions = [
+    "Độ tuổi quy định: Trẻ 6 tuổi (sinh năm 2020) cư trú hợp pháp tại xã Pơng Drang, huyện Krông Búk.",
+    "Các bước thực hiện:",
+    "Điền đầy đủ thông tin vào mẫu đăng ký tuyển sinh trực tuyến.",
+    "Lưu lại mã hồ sơ tuyển sinh được cấp sau khi gửi đăng ký.",
+    "Sử dụng số điện thoại cha mẹ để theo dõi tiến độ phê duyệt trực tuyến.",
+    "Khi hồ sơ được chấp nhận: Nhà trường sẽ gửi tin nhắn/gọi điện mời cha mẹ mang bản sao khai sinh và mã số định danh tới văn phòng trường để đối chiếu chính thức."
+  ].join("\n");
   const [selectedClubId, setSelectedClubId] = useState(clubs[0]?.id || "");
   const [registrationForm, setRegistrationForm] = useState({
     studentName: "",
     studentClass: "",
     parentName: "",
     parentPhone: "",
+    birthDate: "",
+    gender: "Nam",
+    address: "",
     notes: ""
   });
-  const [registrations, setRegistrations] = useState<ClubRegistration[]>([]);
+  const [registrations, setRegistrations] = useState<ClubRegistration[]>(() => {
+    const saved = localStorage.getItem("lvt_admission_registrations");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [admissionInstructions, setAdmissionInstructions] = useState(() => localStorage.getItem("lvt_admission_instructions") || defaultAdmissionInstructions);
+  const [isEditingAdmissionInstructions, setIsEditingAdmissionInstructions] = useState(false);
+  const [instructionDraft, setInstructionDraft] = useState(admissionInstructions);
+  const [isQaOpen, setIsQaOpen] = useState(false);
+  const [qaInput, setQaInput] = useState("");
+  const [qaMessages, setQaMessages] = useState<{ role: "parent" | "school"; content: string; time: string }[]>(() => {
+    const saved = localStorage.getItem("lvt_realtime_qa_messages");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      {
+        role: "school",
+        content: "Xin chào quý phụ huynh. Nhà trường sẵn sàng hỗ trợ về tuyển sinh, hồ sơ và lịch học.",
+        time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("lvt_admission_registrations", JSON.stringify(registrations));
+  }, [registrations]);
+
+  useEffect(() => {
+    localStorage.setItem("lvt_admission_instructions", admissionInstructions);
+  }, [admissionInstructions]);
+
+  useEffect(() => {
+    localStorage.setItem("lvt_realtime_qa_messages", JSON.stringify(qaMessages));
+  }, [qaMessages]);
 
   // --- CMS MODALS STATES ---
   // Student Modal
@@ -898,17 +945,19 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     }
   };
 
-  // --- CLUB REGISTRATION FORM ---
+  // --- ADMISSION REGISTRATION FORM ---
   const handleClubRegisterSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!registrationForm.studentName || !registrationForm.studentClass || !registrationForm.parentName || !registrationForm.parentPhone) {
+    if (!registrationForm.studentName || !registrationForm.birthDate || !registrationForm.address || !registrationForm.parentName || !registrationForm.parentPhone) {
       triggerAlert("Cảnh báo", "Vui lòng điền đầy đủ các thông tin bắt buộc (*)", "warning");
       return;
     }
 
     const newReg: ClubRegistration = {
       ...registrationForm,
-      clubId: selectedClubId,
+      studentClass: "Tuyển sinh lớp 1",
+      clubId: "admission-grade-1",
+      status: "Đã tiếp nhận",
       registeredAt: new Date().toLocaleString("vi-VN")
     };
 
@@ -920,12 +969,60 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       studentClass: "",
       parentName: "",
       parentPhone: "",
+      birthDate: "",
+      gender: "Nam",
+      address: "",
       notes: ""
     });
 
     setTimeout(() => {
       setRegistrationSuccess(false);
     }, 5000);
+  };
+
+  const handleSaveAdmissionInstructions = () => {
+    const clean = instructionDraft.trim();
+    if (!clean) {
+      triggerAlert("Cảnh báo", "Nội dung hướng dẫn nộp hồ sơ không được để trống.", "warning");
+      return;
+    }
+    setAdmissionInstructions(clean);
+    setIsEditingAdmissionInstructions(false);
+    triggerAlert("Thành công", "Đã cập nhật hướng dẫn nộp hồ sơ.", "success");
+  };
+
+  const handleDownloadAdmissionRegistrations = () => {
+    if (registrations.length === 0) {
+      triggerAlert("Thông báo", "Chưa có hồ sơ đăng ký tuyển sinh để tải về.", "info");
+      return;
+    }
+
+    const rows = registrations.map((reg, index) => ({
+      "STT": index + 1,
+      "Họ tên phụ huynh": reg.parentName,
+      "Số điện thoại": reg.parentPhone,
+      "Họ tên học sinh": reg.studentName,
+      "Ngày sinh": reg.birthDate || "",
+      "Giới tính": reg.gender || "",
+      "Địa chỉ thường trú/tạm trú": reg.address || "",
+      "Nguyện vọng/Ghi chú": reg.notes || "",
+      "Trạng thái": reg.status || "Đã tiếp nhận",
+      "Thời gian đăng ký": reg.registeredAt
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Dang ky tuyen sinh");
+    XLSX.writeFile(workbook, `danh-sach-dang-ky-tuyen-sinh-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const handleSendQaMessage = (e: FormEvent) => {
+    e.preventDefault();
+    const content = qaInput.trim();
+    if (!content) return;
+
+    const time = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+    setQaMessages(prev => [...prev, { role: isAdminMode ? "school" : "parent", content, time }]);
+    setQaInput("");
   };
 
   const renderClubIcon = (iconName: string) => {
@@ -953,7 +1050,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
           Cổng Tra Cứu & Đăng Ký Trực Tuyến
         </h2>
         <p className="text-sm text-emerald-900/70">
-          Giải pháp công nghệ hỗ trợ Phụ huynh và Học sinh tra cứu kết quả rèn luyện học tập, xem thời khóa biểu hàng ngày và đăng ký câu lạc bộ ngoại khóa nhanh chóng.
+          Giải pháp công nghệ hỗ trợ Phụ huynh và Học sinh tra cứu kết quả học tập, xem thời khóa biểu hàng ngày và đăng ký tuyển sinh lớp 1 trực tuyến.
         </p>
       </section>
 
@@ -993,7 +1090,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
             }`}
           >
             <ClipboardList className="h-4 w-4" />
-            <span>Đăng Ký CLB</span>
+            <span>Đăng Ký Tuyển Sinh</span>
           </button>
         </div>
       </section>
@@ -1878,206 +1975,248 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
         </div>
       )}
 
-      {/* 3. CLUB REGISTRATION VIEW */}
+      {/* 3. ADMISSION REGISTRATION VIEW */}
       {activeSubTab === "clubs" && (
         <div className="space-y-8 animate-in fade-in duration-200">
-          
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 max-w-5xl mx-auto">
-            {/* Left side: Club Information Grid */}
-            <div className="lg:col-span-7 space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pl-2 border-l-4 border-emerald-600">
-                <div>
-                  <h3 className="text-base font-bold text-emerald-950">
-                    Các Câu Lạc Bộ Ngoại Khóa Đang Hoạt Động
-                  </h3>
-                  <p className="text-xs text-emerald-900/60 leading-relaxed mt-0.5">
-                    Hoạt động ngoại khóa giúp các con rèn luyện kỹ năng toàn diện thể chất và tinh thần.
-                  </p>
+          <section className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700">Phòng tuyển sinh trực tuyến</span>
+            <h3 className="font-serif text-3xl font-black text-slate-950">Tuyển Sinh Lớp 1 Trực Tuyến</h3>
+            <p className="text-sm text-slate-500">
+              Giúp phụ huynh dễ dàng nộp đơn xét tuyển vào lớp 1 cho con nhanh chóng, tiện lợi.
+            </p>
+          </section>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 max-w-6xl mx-auto">
+            <div className="lg:col-span-4 space-y-5">
+              <div className="rounded-3xl bg-emerald-950 p-6 text-white shadow-lg space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="font-serif text-lg font-black text-yellow-300 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span>Hướng Dẫn Nộp Hồ Sơ</span>
+                  </h4>
+                  {isAdminMode && !isEditingAdmissionInstructions && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInstructionDraft(admissionInstructions);
+                        setIsEditingAdmissionInstructions(true);
+                      }}
+                      className="rounded-lg bg-white/10 p-2 text-white hover:bg-white/20"
+                      title="Sửa hướng dẫn"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
-                {isAdminMode && (
-                  <button
-                    onClick={handleOpenAddClub}
-                    className="flex items-center space-x-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-[10px] shadow-md transition-all active:scale-95 shrink-0"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>Thêm CLB mới</span>
-                  </button>
-                )}
-              </div>
 
-              <div className="space-y-3">
-                {clubs.map((club) => (
-                  <div
-                    key={club.id}
-                    onClick={() => setSelectedClubId(club.id)}
-                    className={`rounded-2xl border p-4 flex gap-4 items-start cursor-pointer transition-all relative group ${
-                      selectedClubId === club.id
-                        ? "bg-white border-emerald-600 shadow-md ring-2 ring-emerald-600/10"
-                        : "bg-white/80 border-emerald-50 hover:bg-white"
-                    }`}
-                  >
-                    {/* Admin controllers for Club */}
-                    {isAdminMode && (
-                      <div className="absolute top-4 right-4 flex items-center space-x-1.5" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleOpenEditClub(club)}
-                          className="p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-colors"
-                          title="Sửa CLB"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClub(club.id)}
-                          className="p-1.5 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"
-                          title="Xóa CLB"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    )}
-
-                    <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${club.color} text-white flex items-center justify-center shrink-0`}>
-                      {renderClubIcon(club.iconName)}
-                    </div>
-                    <div className="space-y-1 flex-1 pr-16">
-                      <h4 className="text-sm font-bold text-emerald-950">{club.name}</h4>
-                      <p className="text-xs text-emerald-900/70 leading-relaxed">{club.description}</p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1.5 text-[10px] font-bold text-emerald-900/50">
-                        <span>Lịch sinh hoạt: {club.schedule}</span>
-                        <span>•</span>
-                        <span>Phụ trách: {club.teacher}</span>
-                      </div>
+                {isEditingAdmissionInstructions ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={instructionDraft}
+                      onChange={(e) => setInstructionDraft(e.target.value)}
+                      rows={10}
+                      className="w-full rounded-2xl border border-white/20 bg-white/95 p-3 text-xs font-semibold leading-relaxed text-emerald-950 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingAdmissionInstructions(false)}
+                        className="rounded-xl px-3 py-2 text-xs font-bold text-white hover:bg-white/10"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveAdmissionInstructions}
+                        className="rounded-xl bg-yellow-300 px-4 py-2 text-xs font-black text-emerald-950 hover:bg-yellow-200"
+                      >
+                        Lưu hướng dẫn
+                      </button>
                     </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-2 text-xs font-bold leading-relaxed text-emerald-50">
+                    {admissionInstructions.split("\n").filter(Boolean).map((line, idx) => (
+                      <p key={idx}>{line}</p>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right side: Registration Form */}
-            <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-emerald-50 shadow-md space-y-4 h-fit">
-              <div className="text-center space-y-1">
-                <h4 className="text-base font-bold text-emerald-950">Đơn Đăng Ký Sinh Hoạt CLB</h4>
-                <p className="text-xs text-emerald-900/60">Quý phụ huynh điền thông tin học sinh dưới đây</p>
+            <div className="lg:col-span-8 bg-white rounded-3xl p-6 border border-emerald-50 shadow-md space-y-5 h-fit">
+              <div className="space-y-1 border-b border-slate-100 pb-4">
+                <h4 className="font-serif text-lg font-black text-slate-950 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                  <span>Mẫu Đăng Ký Tuyển Sinh Trực Tuyến Lớp 1</span>
+                </h4>
               </div>
 
               {registrationSuccess && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center text-xs text-emerald-800 font-bold flex items-center justify-center space-x-2 animate-bounce">
                   <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span>Đăng ký tham gia câu lạc bộ thành công!</span>
+                  <span>Nộp đơn tuyển sinh trực tuyến thành công!</span>
                 </div>
               )}
 
               <form onSubmit={handleClubRegisterSubmit} className="space-y-3">
-                
-                {/* School Club Selection info */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-emerald-900/60 block">Câu lạc bộ đăng ký:</span>
-                  <div className="rounded-xl bg-emerald-50/50 border border-emerald-100 p-3 text-xs font-bold text-emerald-950">
-                    {clubs.find(c => c.id === selectedClubId)?.name || "Chưa chọn câu lạc bộ"}
+                <div className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black uppercase text-emerald-800 inline-flex">
+                  I. Thông tin cha / mẹ / người giám hộ
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label htmlFor="parent-name" className="text-[10px] font-bold text-slate-700 block">Họ và Tên Phụ huynh (*):</label>
+                    <input
+                      id="parent-name"
+                      type="text"
+                      required
+                      placeholder="Ví dụ: Nguyễn Văn Hùng"
+                      value={registrationForm.parentName}
+                      onChange={(e) => setRegistrationForm({ ...registrationForm, parentName: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 px-3 text-xs font-semibold placeholder-slate-400 text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="parent-phone" className="text-[10px] font-bold text-slate-700 block">Số điện thoại liên hệ (*):</label>
+                    <input
+                      id="parent-phone"
+                      type="tel"
+                      required
+                      placeholder="Ví dụ: 0912345678"
+                      value={registrationForm.parentPhone}
+                      onChange={(e) => setRegistrationForm({ ...registrationForm, parentPhone: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 px-3 text-xs font-semibold placeholder-slate-400 text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black uppercase text-emerald-800 inline-flex">
+                  II. Thông tin bé đăng ký học lớp 1
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1 md:col-span-2">
+                    <label htmlFor="student-name" className="text-[10px] font-bold text-slate-700 block">Họ và Tên Học sinh (*):</label>
+                    <input
+                      id="student-name"
+                      type="text"
+                      required
+                      placeholder="Ví dụ: Nguyễn Minh Khôi (nhập chữ in hoa có dấu)"
+                      value={registrationForm.studentName}
+                      onChange={(e) => setRegistrationForm({ ...registrationForm, studentName: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 px-3 text-xs font-semibold placeholder-slate-400 text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="student-birth" className="text-[10px] font-bold text-slate-700 block">Ngày sinh của bé (*):</label>
+                    <input
+                      id="student-birth"
+                      type="date"
+                      required
+                      value={registrationForm.birthDate}
+                      onChange={(e) => setRegistrationForm({ ...registrationForm, birthDate: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 px-3 text-xs font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="student-gender" className="text-[10px] font-bold text-slate-700 block">Giới tính (*):</label>
+                    <select
+                      id="student-gender"
+                      value={registrationForm.gender}
+                      onChange={(e) => setRegistrationForm({ ...registrationForm, gender: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 px-3 text-xs font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    >
+                      <option>Nam</option>
+                      <option>Nữ</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label htmlFor="student-address" className="text-[10px] font-bold text-slate-700 block">Địa chỉ thường trú / tạm trú (*):</label>
+                    <input
+                      id="student-address"
+                      type="text"
+                      required
+                      placeholder="Ví dụ: Thôn 2, xã Pơng Drang, Krông Búk"
+                      value={registrationForm.address}
+                      onChange={(e) => setRegistrationForm({ ...registrationForm, address: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 px-3 text-xs font-semibold placeholder-slate-400 text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor="student-name" className="text-[10px] font-bold text-emerald-900/60 block">Họ tên Học sinh (*):</label>
-                  <input
-                    id="student-name"
-                    type="text"
-                    required
-                    placeholder="Nhập họ tên học sinh..."
-                    value={registrationForm.studentName}
-                    onChange={(e) => setRegistrationForm({ ...registrationForm, studentName: e.target.value })}
-                    className="w-full rounded-xl border border-emerald-100 bg-emerald-50/20 py-2 px-3 text-xs font-semibold placeholder-emerald-900/40 text-emerald-950 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="student-class" className="text-[10px] font-bold text-emerald-900/60 block">Lớp học hiện tại (*):</label>
-                  <input
-                    id="student-class"
-                    type="text"
-                    required
-                    placeholder="Ví dụ: 4A, 1B..."
-                    value={registrationForm.studentClass}
-                    onChange={(e) => setRegistrationForm({ ...registrationForm, studentClass: e.target.value })}
-                    className="w-full rounded-xl border border-emerald-100 bg-emerald-50/20 py-2 px-3 text-xs font-semibold placeholder-emerald-900/40 text-emerald-950 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="parent-name" className="text-[10px] font-bold text-emerald-900/60 block">Họ tên Phụ huynh (*):</label>
-                  <input
-                    id="parent-name"
-                    type="text"
-                    required
-                    placeholder="Nhập họ tên bố hoặc mẹ..."
-                    value={registrationForm.parentName}
-                    onChange={(e) => setRegistrationForm({ ...registrationForm, parentName: e.target.value })}
-                    className="w-full rounded-xl border border-emerald-100 bg-emerald-50/20 py-2 px-3 text-xs font-semibold placeholder-emerald-900/40 text-emerald-950 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="parent-phone" className="text-[10px] font-bold text-emerald-900/60 block">Số điện thoại liên hệ (*):</label>
-                  <input
-                    id="parent-phone"
-                    type="tel"
-                    required
-                    placeholder="Nhập số điện thoại di động..."
-                    value={registrationForm.parentPhone}
-                    onChange={(e) => setRegistrationForm({ ...registrationForm, parentPhone: e.target.value })}
-                    className="w-full rounded-xl border border-emerald-100 bg-emerald-50/20 py-2 px-3 text-xs font-semibold placeholder-emerald-900/40 text-emerald-950 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="reg-notes" className="text-[10px] font-bold text-emerald-900/60 block">Ghi chú / Nguyện vọng (nếu có):</label>
+                  <label htmlFor="reg-notes" className="text-[10px] font-bold text-slate-700 block">Nguyện vọng / Ghi chú khác (Không bắt buộc):</label>
                   <textarea
                     id="reg-notes"
-                    rows={2}
-                    placeholder="Năng khiếu hoặc nguyện vọng đặc biệt..."
+                    rows={3}
+                    placeholder="Ví dụ: Mong muốn đăng ký lớp bán trú, bé có năng khiếu vẽ hoặc cần chế độ dinh dưỡng đặc thù..."
                     value={registrationForm.notes}
                     onChange={(e) => setRegistrationForm({ ...registrationForm, notes: e.target.value })}
-                    className="w-full rounded-xl border border-emerald-100 bg-emerald-50/20 py-2 px-3 text-xs font-semibold placeholder-emerald-900/40 text-emerald-950 focus:border-emerald-500 focus:bg-white focus:outline-none resize-none"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 px-3 text-xs font-semibold placeholder-slate-400 text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-md"
+                  className="w-full rounded-xl bg-emerald-700 py-4 text-sm font-black text-white hover:bg-emerald-800 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
                 >
-                  Gửi đăng ký tham gia
+                  <Send className="h-4 w-4" />
+                  <span>Nộp Đơn Tuyển Sinh Trực Tuyến</span>
                 </button>
               </form>
             </div>
           </div>
 
-          {/* Subscriptions log table */}
-          {registrations.length > 0 && (
+          {/* Admission registrations log table */}
+          {(isAdminMode || registrations.length > 0) && (
             <div className="bg-white rounded-3xl border border-emerald-50 p-6 shadow-sm max-w-5xl mx-auto space-y-4 animate-in slide-in-from-bottom-4 duration-300">
-              <h4 className="text-sm font-bold text-emerald-950">Danh Sách Đăng Ký Gần Đây (Thực tế của bạn)</h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h4 className="text-sm font-bold text-emerald-950">Danh Sách Đăng Ký Tuyển Sinh</h4>
+                {isAdminMode && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadAdmissionRegistrations}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Tải danh sách Excel</span>
+                  </button>
+                )}
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-emerald-50 text-emerald-900/60 font-bold">
                       <th className="py-2 px-4">Học Sinh</th>
-                      <th className="py-2 px-4">Lớp</th>
-                      <th className="py-2 px-4">Câu Lạc Bộ</th>
+                      <th className="py-2 px-4">Ngày Sinh</th>
+                      <th className="py-2 px-4">Địa Chỉ</th>
                       <th className="py-2 px-4">Phụ Huynh</th>
+                      <th className="py-2 px-4">Trạng Thái</th>
                       <th className="py-2 px-4">Thời Gian Đăng Ký</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {registrations.map((reg, idx) => (
+                    {registrations.length > 0 ? registrations.map((reg, idx) => (
                       <tr key={idx} className="border-b border-emerald-50/50 hover:bg-emerald-50/20 transition-colors">
                         <td className="py-3 px-4 font-bold text-emerald-950">{reg.studentName}</td>
-                        <td className="py-3 px-4 font-semibold text-emerald-900">{reg.studentClass}</td>
-                        <td className="py-3 px-4 text-emerald-950">
-                          {clubs.find(c => c.id === reg.clubId)?.name}
-                        </td>
+                        <td className="py-3 px-4 font-semibold text-emerald-900">{reg.birthDate}</td>
+                        <td className="py-3 px-4 text-emerald-900/70">{reg.address}</td>
                         <td className="py-3 px-4 text-emerald-900/70">{reg.parentName} ({reg.parentPhone})</td>
+                        <td className="py-3 px-4">
+                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
+                            {reg.status || "Đã tiếp nhận"}
+                          </span>
+                        </td>
                         <td className="py-3 px-4 text-emerald-900/50">{reg.registeredAt}</td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-slate-400 font-semibold">
+                          Chưa có hồ sơ đăng ký tuyển sinh.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -2086,6 +2225,79 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
 
         </div>
       )}
+
+      {/* Floating realtime Q&A */}
+      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
+        {isQaOpen && (
+          <div className="w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-2xl animate-in slide-in-from-bottom-3 fade-in duration-200">
+            <div className="flex items-center justify-between bg-emerald-700 px-4 py-3 text-white">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                <div>
+                  <h4 className="text-sm font-black">Hỏi đáp với nhà trường</h4>
+                  <p className="text-[10px] font-semibold text-emerald-50">
+                    {isAdminMode ? "Chế độ phản hồi quản trị" : "Phụ huynh gửi câu hỏi trực tiếp"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsQaOpen(false)}
+                className="rounded-lg p-1 text-emerald-50 hover:bg-white/10"
+                title="Đóng hỏi đáp"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="max-h-80 space-y-3 overflow-y-auto bg-slate-50 p-4">
+              {qaMessages.map((message, idx) => {
+                const isSchool = message.role === "school";
+                return (
+                  <div key={idx} className={`flex ${isSchool ? "justify-start" : "justify-end"}`}>
+                    <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-xs shadow-sm ${
+                      isSchool
+                        ? "bg-white text-slate-700 border border-slate-100"
+                        : "bg-emerald-600 text-white"
+                    }`}>
+                      <div className={`mb-1 text-[9px] font-black uppercase ${isSchool ? "text-emerald-700" : "text-emerald-50"}`}>
+                        {isSchool ? "Nhà trường" : "Phụ huynh"} · {message.time}
+                      </div>
+                      <p className="leading-relaxed">{message.content}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <form onSubmit={handleSendQaMessage} className="flex items-center gap-2 border-t border-slate-100 bg-white p-3">
+              <input
+                type="text"
+                value={qaInput}
+                onChange={(e) => setQaInput(e.target.value)}
+                placeholder={isAdminMode ? "Nhập phản hồi của nhà trường..." : "Nhập câu hỏi của phụ huynh..."}
+                className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                title="Gửi tin nhắn"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setIsQaOpen(prev => !prev)}
+          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-700 text-white shadow-xl shadow-emerald-900/20 hover:bg-emerald-800 active:scale-95"
+          title="Hỏi đáp với nhà trường"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </button>
+      </div>
 
       {/* --- STUDENT MODAL (ADD / EDIT) --- */}
       {showStudentModal && (

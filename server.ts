@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
@@ -11,6 +12,46 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+const contentFilePath = path.join(process.cwd(), "data", "site-content.json");
+
+async function readSiteContent() {
+  try {
+    const raw = await readFile(contentFilePath, "utf8");
+    return JSON.parse(raw);
+  } catch (error: any) {
+    if (error?.code === "ENOENT") {
+      return {};
+    }
+    throw error;
+  }
+}
+
+async function writeSiteContent(content: Record<string, unknown>) {
+  await mkdir(path.dirname(contentFilePath), { recursive: true });
+  await writeFile(contentFilePath, JSON.stringify(content, null, 2), "utf8");
+}
+
+app.get("/api/site-content", async (_req, res) => {
+  try {
+    return res.json(await readSiteContent());
+  } catch (error: any) {
+    console.error("Read Site Content Error:", error);
+    return res.status(500).json({ error: "Khong the doc noi dung website." });
+  }
+});
+
+app.patch("/api/site-content", async (req, res) => {
+  try {
+    const current = await readSiteContent();
+    const next = { ...current, ...req.body };
+    await writeSiteContent(next);
+    return res.json({ success: true, content: next });
+  } catch (error: any) {
+    console.error("Write Site Content Error:", error);
+    return res.status(500).json({ error: "Khong the luu noi dung website." });
+  }
+});
 
 // Initialize Gemini client on the server side
 const ai = new GoogleGenAI({
