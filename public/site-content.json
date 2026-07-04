@@ -978,5 +978,32 @@
     }
   ],
   "addedLookupClasses": [],
-  "updatedAt": "2026-07-04T01:03:01.476Z"
+  "homeHighlightContent": {
+    "sectionTitle": "Các Điểm Nhấn Nổi Bật Của Trường",
+    "sectionDescription": "Sự kết hợp hài hòa giữa chất lượng đào tạo, giữ gìn nét đẹp văn hóa dân tộc và đón đầu xu thế công nghệ giáo dục hiện đại.",
+    "items": [
+      {
+        "title": "Gìn Giữ Bản Sắc Tây Nguyên",
+        "description": "Tự hào duy trì Câu lạc bộ Cồng Chiêng Nhí & các tiết học nhạc cụ dân tộc truyền thống, tôn vinh di sản văn hóa Đắk Lắk.",
+        "image": "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&fm=webp&q=75&w=400",
+        "tag": "Văn Hóa"
+      },
+      {
+        "title": "Công Nghệ & Trí Tuệ Nhân Tạo",
+        "description": "Ứng dụng công nghệ giáo dục hiện đại và tích hợp Trợ lý AI 'Lê Văn Tám' đồng hành 24/7 cùng phụ huynh và học sinh.",
+        "image": "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&fm=webp&q=75&w=400",
+        "tag": "Sáng Tạo"
+      },
+      {
+        "title": "Môi Trường Học Hạnh Phúc",
+        "description": "Mỗi ngày đến trường là một ngày vui. Khuôn viên xanh, phòng lớp thân thiện, bồi dưỡng toàn diện Trí - Thể - Mỹ.",
+        "image": "https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&fm=webp&q=75&w=400",
+        "tag": "Phát Triển"
+      }
+    ],
+    "ctaTitle": "Đồng Hành Phát Triển Cùng Con Em Pơng Drang",
+    "ctaDescription": "Bạn có biết? Trang web này tích hợp hệ thống quản lý đăng ký câu lạc bộ trực tuyến và tra cứu kết quả học tập của các con cực kỳ tiện lợi cho quý phụ huynh. Đồng thời, Trợ lý AI Lê Văn Tám luôn sẵn sàng giải đáp mọi thắc mắc học tập của học sinh.",
+    "ctaButtonText": "Trải Nghiệm Cổng Tra Cứu Ngay"
+  },
+  "updatedAt": "2026-07-04T04:52:57.495Z"
 }
