@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+.bg-amber-500 button.bg-white.text-emerald-950 {
+  display: none !important;
+}
+
+[data-admin-bar] button.bg-white,
+[data-admin-bar] [class*="bg-white"][class*="text-emerald-950"],
+[data-admin-actions] button.bg-white,
+[data-admin-actions] [class*="bg-white"][class*="text-emerald-950"] {
+  display: none !important;
+}

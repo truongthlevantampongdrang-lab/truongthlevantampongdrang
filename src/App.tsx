@@ -205,11 +205,13 @@ export default function App() {
   useLayoutEffect(() => {
     const removeLegacyHighlightButtons = () => {
       document.querySelectorAll("button").forEach((button) => {
+        const title = button.getAttribute("title") || "";
+        const ariaLabel = button.getAttribute("aria-label") || "";
         const text = button.textContent || "";
-        if (
-          text.includes("Sửa Điểm Nhấn Trang Chủ") ||
-          text.includes("Sửa điểm nhấn trang chủ")
-        ) {
+        const normalizedText = `${text} ${title} ${ariaLabel}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const isLegacyHighlightButton =
+          ["sua", "diem", "nhan", "trang", "chu"].every((part) => normalizedText.includes(part));
+        if (isLegacyHighlightButton) {
           button.remove();
         }
       });
@@ -225,7 +227,6 @@ export default function App() {
   useEffect(() => {
     const page = getSeoPage(activeTab);
     const pageUrl = getPageUrl(page);
-
     document.title = page.title;
     upsertMeta('meta[name="description"]', { name: "description", content: page.description });
     upsertMeta('meta[name="keywords"]', { name: "keywords", content: page.keywords });
@@ -640,8 +641,8 @@ export default function App() {
     }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
+  const renderContent = (tab = activeTab) => {
+    switch (tab) {
       case "home":
         return (
           <Hero
@@ -697,12 +698,12 @@ export default function App() {
       <div className="flex flex-col">
         {/* Admin Bar */}
         {isAdminMode && (
-          <div className="bg-amber-500 text-emerald-950 py-2 px-4 text-center text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner border-b border-amber-600/30">
+          <div data-admin-bar className="bg-amber-500 text-emerald-950 py-2 px-4 text-center text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner border-b border-amber-600/30">
             <div className="flex items-center space-x-2">
               <Shield className="h-4 w-4 text-emerald-950 animate-bounce" />
               <span>ĐANG Ở CHẾ ĐỘ QUẢN TRỊ VIÊN. Bạn có thể tự do chỉnh sửa trực tiếp mọi nội dung, tin tức, học sinh, CLB và thời khóa biểu!</span>
             </div>
-            <div className="flex items-center space-x-2 shrink-0 sm:ml-4">
+            <div data-admin-actions className="flex items-center space-x-2 shrink-0 sm:ml-4">
               <button
                 onClick={openChangeCredsModal}
                 className="px-2 py-0.5 bg-emerald-950 text-amber-400 border border-emerald-900 rounded hover:bg-emerald-900 transition-colors text-[10px] font-bold"
@@ -730,43 +731,18 @@ export default function App() {
         {/* Main Content Stage container */}
         <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div>
-            <TabErrorBoundary>
-              <div className={activeTab === "home" ? "block" : "hidden"}>
-                <Hero
-                  onNavigate={navigateToTab}
-                  isAdminMode={isAdminMode}
-                  schoolInfo={schoolInfo}
-                  updateSchoolInfo={updateSchoolInfo}
-                />
-              </div>
-              <div className={activeTab === "about" ? "block" : "hidden"}>
-                <About
-                  isAdminMode={isAdminMode}
-                  schoolInfo={schoolInfo}
-                />
-              </div>
-              <div className={activeTab === "news" ? "block" : "hidden"}>
-                <News
-                  isAdminMode={isAdminMode}
-                  newsList={news}
-                  updateNewsList={updateNews}
-                />
-              </div>
-              <div className={activeTab === "portal" ? "block" : "hidden"}>
-                <Portal
-                  isAdminMode={isAdminMode}
-                  clubs={clubs}
-                  updateClubs={updateClubs}
-                  students={students}
-                  updateStudents={updateStudents}
-                  schedules={schedules}
-                  updateSchedules={updateSchedules}
-                />
-              </div>
-              <div className={activeTab === "assistant" ? "block" : "hidden"}>
-                <Assistant />
-              </div>
-            </TabErrorBoundary>
+            {SEO_PAGES.map((page) => (
+              <section
+                key={page.tab}
+                hidden={activeTab !== page.tab}
+                aria-hidden={activeTab !== page.tab}
+                className={activeTab === page.tab ? "block" : "hidden"}
+              >
+                <TabErrorBoundary>
+                  {renderContent(page.tab)}
+                </TabErrorBoundary>
+              </section>
+            ))}
           </div>
         </main>
       </div>
