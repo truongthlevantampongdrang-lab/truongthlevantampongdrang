@@ -822,8 +822,7 @@
   ],
   "admissionInstructions": "Độ tuổi quy định: Trẻ 6 tuổi (sinh năm 2020) cư trú hợp pháp tại xã Pơng Drang, huyện Krông Búk.\nCác bước thực hiện:\nĐiền đầy đủ thông tin vào mẫu đăng ký tuyển sinh trực tuyến.\nLưu lại mã hồ sơ tuyển sinh được cấp sau khi gửi đăng ký.\nSử dụng số điện thoại cha mẹ để theo dõi tiến độ phê duyệt trực tuyến.\nKhi hồ sơ được chấp nhận: Nhà trường sẽ gửi tin nhắn/gọi điện mời cha mẹ mang bản sao khai sinh và mã số định danh tới văn phòng trường để đối chiếu chính thức.",
   "teachers": [
-    "Cô Nguyễn Thị Hà",
-    "Cô Lê Thị Mai"
+    "Thầy Uông Đông Anh"
   ],
   "admissionRegistrations": [],
   "realtimeQaMessages": [
@@ -861,5 +860,5 @@
     "ctaDescription": "Bạn có biết? Trang web này tích hợp hệ thống quản lý đăng ký tuyển sinh trực tuyến và tra cứu kết quả học tập của các con cực kỳ tiện lợi cho quý phụ huynh. Đồng thời, Trợ lý AI Lê Văn Tám luôn sẵn sàng giải đáp mọi thắc mắc học tập của học sinh.",
     "ctaButtonText": "Trải Nghiệm Cổng Tra Cứu Ngay"
   },
-  "updatedAt": "2026-07-04T10:45:05.548Z"
+  "updatedAt": "2026-07-04T10:46:15.594Z"
 }
