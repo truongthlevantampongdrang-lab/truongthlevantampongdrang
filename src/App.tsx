@@ -241,6 +241,7 @@ export default function App() {
       principalName: currentPrincipal.name,
       principalTitle: currentPrincipal.title,
       principalWord: "Tại Trường Tiểu học Lê Văn Tám xã Pơng Drang, chúng tôi tin tưởng sâu sắc rằng mỗi đứa trẻ đều sở hữu những năng lực tiềm ẩn riêng biệt. Sứ mệnh của tập thể sư phạm nhà trường là truyền lửa đam mê học hỏi, bồi đắp lòng nhân ái, lòng yêu quê hương Tây Nguyên và chuẩn bị cho các em những hành trang vững vàng nhất bước vào tương lai. Chúng tôi cam kết mang tới một môi trường dạy học chất lượng, an toàn, tràn ngập tình yêu thương và tôn trọng sự khác biệt.",
+      heroImage: sampleImages.heroMain,
       principalAvatar: currentPrincipal.avatar
     };
   });

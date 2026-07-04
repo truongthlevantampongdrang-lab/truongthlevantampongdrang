@@ -40,6 +40,7 @@ interface HeroProps {
     principalTitle: string;
     principalWord: string;
     principalAvatar: string;
+    heroImage?: string;
     stats?: { label: string; value: string }[];
   };
   updateSchoolInfo: (info: any) => void;
@@ -288,7 +289,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                 {/* Main image card */}
                 <div className="relative rounded-xl overflow-hidden border-2 border-emerald-800 bg-emerald-950 aspect-[4/3] shadow-2xl">
                   <img
-                    src={sampleImages.heroMain}
+                    src={schoolInfo.heroImage || sampleImages.heroMain}
                     alt="School classroom"
                     fetchPriority="high"
                     decoding="async"
@@ -736,6 +737,16 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
                 />
               </div>
+
+              <ImageUploadField
+                label="Ảnh lớn đầu trang"
+                value={schoolForm.heroImage}
+                fallback={sampleImages.heroMain}
+                aspect="wide"
+                outputWidth={900}
+                outputHeight={675}
+                onChange={(heroImage) => setSchoolForm({ ...schoolForm, heroImage })}
+              />
 
               <div className="flex justify-end space-x-3 pt-2">
                 <button
