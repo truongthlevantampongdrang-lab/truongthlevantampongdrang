@@ -1,6 +1,7 @@
 import { GraduationCap, Users, Award, BookOpen, ChevronRight, Sparkles, Star, Edit, X, Save } from "lucide-react";
 import { useEffect, useState, FormEvent } from "react";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
+import { editableImages } from "../editableAssets";
 
 type HighlightItem = {
   title: string;
@@ -85,19 +86,19 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     {
       title: "Gìn Giữ Bản Sắc Tây Nguyên",
       description: "Tự hào duy trì Câu lạc bộ Cồng Chiêng Nhí & các tiết học nhạc cụ dân tộc truyền thống, tôn vinh di sản văn hóa Đắk Lắk.",
-      image: "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&fm=webp&q=75&w=400",
+      image: editableImages.highlight1,
       tag: "Văn Hóa",
     },
     {
       title: "Công Nghệ & Trí Tuệ Nhân Tạo",
       description: "Ứng dụng công nghệ giáo dục hiện đại và tích hợp Trợ lý AI 'Lê Văn Tám' đồng hành 24/7 cùng phụ huynh và học sinh.",
-      image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&fm=webp&q=75&w=400",
+      image: editableImages.highlight2,
       tag: "Sáng Tạo",
     },
     {
       title: "Môi Trường Học Hạnh Phúc",
       description: "Mỗi ngày đến trường là một ngày vui. Khuôn viên xanh, phòng lớp thân thiện, bồi dưỡng toàn diện Trí - Thể - Mỹ.",
-      image: "https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&fm=webp&q=75&w=400",
+      image: editableImages.highlight3,
       tag: "Phát Triển",
     }
     ],
@@ -286,7 +287,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                 {/* Main image card */}
                 <div className="relative rounded-xl overflow-hidden border-2 border-emerald-800 bg-emerald-950 aspect-[4/3] shadow-2xl">
                   <img
-                    src="https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&fm=webp&q=75&w=600"
+                    src={editableImages.heroMain}
                     alt="School classroom"
                     fetchPriority="high"
                     decoding="async"

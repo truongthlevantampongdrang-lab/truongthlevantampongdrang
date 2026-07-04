@@ -1,6 +1,7 @@
 import { useState, FormEvent, MouseEvent } from "react";
 import { NewsItem } from "../types";
 import { Calendar, User, Search, Eye, X, BookOpen, AlertCircle, Sparkles, Edit, Trash2, Plus, Save } from "lucide-react";
+import { editableImages } from "../editableAssets";
 
 interface NewsProps {
   isAdminMode: boolean;
@@ -43,7 +44,7 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
       category: "Tin tức",
       excerpt: "",
       content: "",
-      image: "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&fm=webp&q=75&w=800",
+      image: editableImages.news2,
       author: "Văn phòng nhà trường"
     });
     setShowEditForm(true);
@@ -99,7 +100,7 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
         date: todayStr,
         excerpt: newsForm.excerpt || newsForm.content.slice(0, 150) + "...",
         content: newsForm.content,
-        image: newsForm.image || "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&fm=webp&q=75&w=800",
+        image: newsForm.image || editableImages.news2,
         author: newsForm.author || "Ban Biên Tập"
       };
       updateNewsList([newArticle, ...newsList]);
@@ -408,7 +409,7 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
                   type="text"
                   value={newsForm.image}
                   onChange={(e) => setNewsForm({ ...newsForm, image: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
+                  placeholder="/truongthlevantampongdrang/editable-images/news-1.png"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
                 />
               </div>

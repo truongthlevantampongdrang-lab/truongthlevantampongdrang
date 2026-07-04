@@ -3,6 +3,7 @@ import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay 
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
 import * as XLSX from "xlsx";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
+import { editableImages } from "../editableAssets";
 
 // Helper to parse Class and Teacher from "Lớp 5A - GVCN: Thầy Lê Anh Tuấn"
 export function parseClassAndTeacher(fullClassName: string) {
@@ -574,7 +575,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
           name,
           className: detectedClass,
           birthDate,
-          avatar: `https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200`,
+          avatar: editableImages.studentDefault,
           grades,
           conduct,
           comment: `Học sinh học tập tích cực, rèn luyện tốt các năng lực cốt lõi.`,
@@ -820,7 +821,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       name: "",
       className: initialClass,
       birthDate: "10/10/2016",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=webp&q=75&w=200",
+      avatar: editableImages.studentDefault,
       math: 9,
       vietnamese: 9,
       science: 9,
@@ -885,7 +886,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       name: studentForm.name,
       className: studentForm.className,
       birthDate: studentForm.birthDate,
-      avatar: studentForm.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=webp&q=75&w=200",
+      avatar: studentForm.avatar || editableImages.studentDefault,
       grades: {
         math: Number(studentForm.math),
         vietnamese: Number(studentForm.vietnamese),
@@ -2423,7 +2424,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                   type="text"
                   value={studentForm.avatar}
                   onChange={(e) => setStudentForm({ ...studentForm, avatar: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
+                  placeholder="/truongthlevantampongdrang/editable-images/student-default.png"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
                 />
               </div>
