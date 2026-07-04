@@ -1,4 +1,4 @@
-import { GraduationCap, Users, Award, BookOpen, ChevronRight, Sparkles, Star, Edit, X, Save } from "lucide-react";
+import { GraduationCap, Users, Award, BookOpen, ChevronRight, Sparkles, Star, Edit, X } from "lucide-react";
 import { useEffect, useState, FormEvent } from "react";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
@@ -19,12 +19,6 @@ type HighlightContent = {
   ctaDescription: string;
   ctaButtonText: string;
 };
-
-type HighlightEditTarget =
-  | { type: "all" }
-  | { type: "section" }
-  | { type: "card"; index: number }
-  | { type: "banner" };
 
 interface HeroProps {
   onNavigate: (tab: string) => void;
@@ -50,9 +44,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
   const [showEditSchoolModal, setShowEditSchoolModal] = useState(false);
   const [showEditPrincipalModal, setShowEditPrincipalModal] = useState(false);
   const [showEditStatsModal, setShowEditStatsModal] = useState(false);
-  const canEditHighlights =
-    isAdminMode || (typeof window !== "undefined" && localStorage.getItem("lvt_is_admin") === "true");
-  
   // States for school form
   const [schoolForm, setSchoolForm] = useState({ ...schoolInfo });
   const [statsForm, setStatsForm] = useState<{ label: string; value: string }[]>([]);
@@ -110,8 +101,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
   };
 
   const [hasLoadedHighlightContent, setHasLoadedHighlightContent] = useState(false);
-  const [showEditHighlightsModal, setShowEditHighlightsModal] = useState(false);
-  const [highlightEditTarget, setHighlightEditTarget] = useState<HighlightEditTarget>({ type: "all" });
   const [highlightContent, setHighlightContent] = useState<HighlightContent>(() => {
     const saved = localStorage.getItem("lvt_home_highlight_content");
     if (saved) {
@@ -121,7 +110,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     }
     return defaultHighlightContent;
   });
-  const [highlightForm, setHighlightForm] = useState<HighlightContent>(highlightContent);
 
   useEffect(() => {
     let isMounted = true;
@@ -158,29 +146,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
   const highlights = highlightContent.items;
 
-  const openHighlightEditor = (target: HighlightEditTarget = { type: "all" }) => {
-    setHighlightForm({
-      ...highlightContent,
-      items: highlightContent.items.map((item) => ({ ...item })),
-    });
-    setHighlightEditTarget(target);
-    setShowEditHighlightsModal(true);
-  };
-
-  useEffect(() => {
-    const handleOpenHighlightEditor = () => {
-      openHighlightEditor();
-      window.setTimeout(() => {
-        document.getElementById("home-highlights-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
-    };
-
-    window.addEventListener("lvt-open-home-highlight-editor", handleOpenHighlightEditor);
-    return () => {
-      window.removeEventListener("lvt-open-home-highlight-editor", handleOpenHighlightEditor);
-    };
-  }, [highlightContent]);
-
   const handleSaveSchoolInfo = (e: FormEvent) => {
     e.preventDefault();
     updateSchoolInfo(schoolForm);
@@ -193,29 +158,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     setShowEditPrincipalModal(false);
   };
 
-  const handleSaveHighlights = (e: FormEvent) => {
-    e.preventDefault();
-    setHighlightContent({
-      ...highlightForm,
-      items: highlightForm.items.map((item) => ({
-        ...item,
-        title: item.title.trim(),
-        description: item.description.trim(),
-        image: item.image.trim(),
-        tag: item.tag.trim(),
-      })),
-    });
-    setShowEditHighlightsModal(false);
-  };
-
-  const highlightModalTitle =
-    highlightEditTarget.type === "section"
-      ? "Chỉnh Sửa Tiêu Đề Khu Vực Điểm Nhấn"
-      : highlightEditTarget.type === "card"
-        ? `Chỉnh Sửa Thẻ Điểm Nhấn ${highlightEditTarget.index + 1}`
-        : highlightEditTarget.type === "banner"
-          ? "Chỉnh Sửa Banner Màu Cam"
-          : "Chỉnh Sửa Toàn Bộ Khu Vực Điểm Nhấn";
 
   return (
     <div className="space-y-16 py-6 relative">
@@ -388,31 +330,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
       {/* Highlights Bento-Grid style */}
       <section id="home-highlights-editor" className="space-y-8 relative scroll-mt-28">
-        {canEditHighlights && (
-          <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-xs font-bold text-emerald-950">
-              Quản trị: Sửa toàn bộ nội dung trong khu vực điểm nhấn và banner cam bên dưới
-            </div>
-            <button
-              onClick={() => openHighlightEditor({ type: "all" })}
-              className="inline-flex items-center justify-center space-x-1 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-emerald-950 shadow-md transition-all hover:bg-amber-400 active:scale-95"
-            >
-              <Edit className="h-3.5 w-3.5" />
-              <span>Sửa khu vực trong hình</span>
-            </button>
-          </div>
-        )}
         <div className="text-center space-y-2 relative">
-          {canEditHighlights && (
-            <button
-              onClick={() => openHighlightEditor({ type: "section" })}
-              className="absolute right-0 top-0 hidden items-center space-x-1 rounded-xl bg-emerald-950 px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-emerald-900 active:scale-95 sm:inline-flex"
-              title="Sửa tiêu đề và nội dung điểm nhấn"
-            >
-              <Edit className="h-3.5 w-3.5" />
-              <span>Sửa</span>
-            </button>
-          )}
           <h2 className="font-sans text-2xl font-extrabold tracking-tight text-emerald-950 sm:text-3xl">
             {highlightContent.sectionTitle}
           </h2>
@@ -427,16 +345,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
               key={i}
               className="relative flex flex-col overflow-hidden rounded-2xl bg-white border border-emerald-50 hover:border-emerald-100 shadow-sm hover:shadow-lg transition-all duration-300"
             >
-              {canEditHighlights && (
-                <button
-                  onClick={() => openHighlightEditor({ type: "card", index: i })}
-                  className="absolute right-3 top-3 z-10 inline-flex items-center space-x-1 rounded-full bg-amber-500 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-950 shadow-md transition-all hover:bg-amber-400 active:scale-95"
-                  title={`Sửa thẻ điểm nhấn ${i + 1}`}
-                >
-                  <Edit className="h-3 w-3" />
-                  <span>Sửa</span>
-                </button>
-              )}
               <div className="relative h-48 overflow-hidden bg-emerald-150">
                 <img
                   src={h.image}
@@ -460,16 +368,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
       {/* Creative local resources banner */}
       <section className="rounded-3xl bg-amber-500 text-emerald-950 p-8 sm:p-10 shadow-lg relative overflow-hidden">
-        {canEditHighlights && (
-          <button
-            onClick={() => openHighlightEditor({ type: "banner" })}
-            className="absolute right-4 top-4 z-20 inline-flex items-center space-x-1 rounded-xl bg-white px-3 py-2 text-xs font-bold text-emerald-950 shadow-md transition-all hover:bg-amber-50 active:scale-95"
-            title="Sửa banner màu cam"
-          >
-            <Edit className="h-3.5 w-3.5" />
-            <span>Sửa banner</span>
-          </button>
-        )}
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 h-64 w-64 rounded-full bg-white/10 blur-2xl"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="space-y-3 max-w-xl">
@@ -487,201 +385,6 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
         </div>
       </section>
 
-      {/* Modal Edit Highlights */}
-      {showEditHighlightsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-emerald-950/40 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl border border-emerald-50 animate-in zoom-in-95 duration-250">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="font-sans text-base font-bold text-slate-900">
-                {highlightModalTitle}
-              </h3>
-              <button
-                onClick={() => setShowEditHighlightsModal(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveHighlights} className="mt-4 space-y-4">
-              <div className="max-h-[70vh] overflow-y-auto pr-1 space-y-5">
-                {(highlightEditTarget.type === "all" || highlightEditTarget.type === "section") && (
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800">Tiêu đề khu vực</h4>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                      Tiêu đề chính
-                    </label>
-                    <input
-                      type="text"
-                      value={highlightForm.sectionTitle}
-                      onChange={(e) => setHighlightForm({ ...highlightForm, sectionTitle: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                      Mô tả dưới tiêu đề
-                    </label>
-                    <textarea
-                      value={highlightForm.sectionDescription}
-                      onChange={(e) => setHighlightForm({ ...highlightForm, sectionDescription: e.target.value })}
-                      rows={2}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-                )}
-
-                {highlightForm.items.map((item, idx) => {
-                  if (highlightEditTarget.type === "section" || highlightEditTarget.type === "banner") {
-                    return null;
-                  }
-                  if (highlightEditTarget.type === "card" && highlightEditTarget.index !== idx) {
-                    return null;
-                  }
-
-                  return (
-                  <div key={idx} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-                      Thẻ điểm nhấn {idx + 1}
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                          Nhãn trên ảnh
-                        </label>
-                        <input
-                          type="text"
-                          value={item.tag}
-                          onChange={(e) => {
-                            const items = highlightForm.items.map((current, itemIndex) =>
-                              itemIndex === idx ? { ...current, tag: e.target.value } : current
-                            );
-                            setHighlightForm({ ...highlightForm, items });
-                          }}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                          Tiêu đề thẻ
-                        </label>
-                        <input
-                          type="text"
-                          value={item.title}
-                          onChange={(e) => {
-                            const items = highlightForm.items.map((current, itemIndex) =>
-                              itemIndex === idx ? { ...current, title: e.target.value } : current
-                            );
-                            setHighlightForm({ ...highlightForm, items });
-                          }}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <ImageUploadField
-                      label="Ảnh thẻ"
-                      value={item.image}
-                      fallback={[sampleImages.highlight1, sampleImages.highlight2, sampleImages.highlight3][idx]}
-                      aspect="wide"
-                      outputWidth={900}
-                      outputHeight={506}
-                      onChange={(image) => {
-                        const items = highlightForm.items.map((current, itemIndex) =>
-                          itemIndex === idx ? { ...current, image } : current
-                        );
-                        setHighlightForm({ ...highlightForm, items });
-                      }}
-                    />
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                        Mô tả thẻ
-                      </label>
-                      <textarea
-                        value={item.description}
-                        onChange={(e) => {
-                          const items = highlightForm.items.map((current, itemIndex) =>
-                            itemIndex === idx ? { ...current, description: e.target.value } : current
-                          );
-                          setHighlightForm({ ...highlightForm, items });
-                        }}
-                        rows={3}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                        required
-                      />
-                    </div>
-                  </div>
-                  );
-                })}
-
-                {(highlightEditTarget.type === "all" || highlightEditTarget.type === "banner") && (
-                <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800">Banner màu cam</h4>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                      Tiêu đề banner
-                    </label>
-                    <input
-                      type="text"
-                      value={highlightForm.ctaTitle}
-                      onChange={(e) => setHighlightForm({ ...highlightForm, ctaTitle: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                      Nội dung banner
-                    </label>
-                    <textarea
-                      value={highlightForm.ctaDescription}
-                      onChange={(e) => setHighlightForm({ ...highlightForm, ctaDescription: e.target.value })}
-                      rows={3}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                      Chữ trên nút
-                    </label>
-                    <input
-                      type="text"
-                      value={highlightForm.ctaButtonText}
-                      onChange={(e) => setHighlightForm({ ...highlightForm, ctaButtonText: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-3 border-t border-slate-100 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowEditHighlightsModal(false)}
-                  className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center space-x-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2 text-sm font-bold text-white transition-all shadow-md"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>Lưu nội dung</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Modal Edit School Info */}
       {showEditSchoolModal && (

@@ -56,7 +56,12 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   const [teachers, setTeachers] = useState<string[]>(() => {
     const saved = localStorage.getItem("lvt_teachers");
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        localStorage.removeItem("lvt_teachers");
+      }
     }
     // Extract default teachers
     const tSet = new Set<string>();
@@ -245,7 +250,15 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   const [selectedLookupClass, setSelectedLookupClass] = useState<string>("Tất cả");
   const [addedLookupClasses, setAddedLookupClasses] = useState<string[]>(() => {
     const saved = localStorage.getItem("lvt_added_lookup_classes");
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        localStorage.removeItem("lvt_added_lookup_classes");
+      }
+    }
+    return [];
   });
 
   useEffect(() => {
@@ -259,7 +272,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     loadSiteContent()
       .then((content) => {
         if (!isMounted) return;
-        if (content.teachers) {
+        if (content.teachers && !localStorage.getItem("lvt_teachers")) {
           setTeachers(content.teachers as string[]);
         }
         if (content.admissionRegistrations) {
@@ -271,7 +284,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
         if (content.realtimeQaMessages) {
           setQaMessages(content.realtimeQaMessages as { role: "parent" | "school"; content: string; time: string }[]);
         }
-        if (content.addedLookupClasses) {
+        if (content.addedLookupClasses && !localStorage.getItem("lvt_added_lookup_classes")) {
           setAddedLookupClasses(content.addedLookupClasses as string[]);
         }
       })

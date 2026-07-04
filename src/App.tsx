@@ -1,10 +1,10 @@
-import { lazy, Suspense, useState, useEffect, FormEvent } from "react";
+import { Component, ErrorInfo, lazy, ReactNode, Suspense, useState, useEffect, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
 import { sampleNews, sampleClubs, sampleStudents, classSchedules } from "./data";
 import { NewsItem, SchoolClub, StudentScore, ClassSchedule } from "./types";
-import { Sparkles, Shield, Eye, EyeOff, Check, X, User, Key, RefreshCw, LogOut, Settings, Mail, Edit } from "lucide-react";
+import { Sparkles, Shield, Eye, EyeOff, Check, X, User, Key, RefreshCw, LogOut, Settings, Mail } from "lucide-react";
 import {
   buildStructuredData,
   getPagePath,
@@ -26,6 +26,33 @@ const Assistant = lazy(() => import("./components/Assistant"));
 
 declare const __APP_BUILD_ID__: string;
 
+class TabErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; message: string }
+> {
+  state = { hasError: false, message: "" };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error.message || "Khong the tai noi dung tab." };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Tab render failed:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-center text-sm font-semibold text-red-700">
+          Khong the hien thi noi dung muc nay. Hay tai lai trang hoac xoa du lieu cache cu cua trinh duyet.
+        </div>
+      );
+    }
+
+    return (this as unknown as { props: { children: ReactNode } }).props.children;
+  }
+}
+
 const contentCacheVersionKey = "lvt_content_cache_version";
 const contentCacheKeys = [
   "lvt_school_info",
@@ -33,12 +60,8 @@ const contentCacheKeys = [
   "lvt_news",
   "lvt_clubs",
   "lvt_students",
-  "lvt_schedules",
   "lvt_about_milestones",
   "lvt_about_leaders",
-  "lvt_home_highlight_content",
-  "lvt_teachers",
-  "lvt_added_lookup_classes",
   "lvt_admission_instructions",
 ];
 
@@ -307,8 +330,11 @@ export default function App() {
     const saved = localStorage.getItem("lvt_schedules");
     if (saved) {
       try {
-        return JSON.parse(saved);
-      } catch (e) {}
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : classSchedules;
+      } catch (e) {
+        localStorage.removeItem("lvt_schedules");
+      }
     }
     return classSchedules;
   });
@@ -334,7 +360,7 @@ export default function App() {
         if (content.students) {
           setStudents(content.students as StudentScore[]);
         }
-        if (content.schedules) {
+        if (content.schedules && !localStorage.getItem("lvt_schedules")) {
           setSchedules(content.schedules as ClassSchedule[]);
         }
       })
@@ -411,19 +437,6 @@ export default function App() {
     if (window.location.pathname !== nextPath) {
       window.history.pushState({ tab: page.tab }, "", nextPath);
     }
-  };
-
-  const openHomeHighlightEditor = () => {
-    const shouldSwitchHome = activeTab !== "home";
-    if (shouldSwitchHome) {
-      navigateToTab("home");
-    }
-
-    window.setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("lvt-open-home-highlight-editor"));
-    }, shouldSwitchHome ? 200 : 0);
-
-    setShowAdminMenuModal(false);
   };
 
   const openChangeCredsModal = () => {
@@ -672,13 +685,6 @@ export default function App() {
             </div>
             <div className="flex items-center space-x-2 shrink-0 sm:ml-4">
               <button
-                onClick={openHomeHighlightEditor}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-emerald-950 border border-emerald-900/20 rounded hover:bg-amber-100 transition-colors text-[10px] font-bold"
-              >
-                <Edit className="h-3 w-3" />
-                <span>Sửa Điểm Nhấn Trang Chủ</span>
-              </button>
-              <button
                 onClick={openChangeCredsModal}
                 className="px-2 py-0.5 bg-emerald-950 text-amber-400 border border-emerald-900 rounded hover:bg-emerald-900 transition-colors text-[10px] font-bold"
               >
@@ -705,9 +711,11 @@ export default function App() {
         {/* Main Content Stage container */}
         <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="animate-in fade-in duration-300">
-            <Suspense fallback={<div className="py-16 text-center text-sm font-semibold text-emerald-700">Đang tải nội dung...</div>}>
-              {renderContent()}
-            </Suspense>
+            <TabErrorBoundary key={activeTab}>
+              <Suspense fallback={<div className="py-16 text-center text-sm font-semibold text-emerald-700">Dang tai noi dung...</div>}>
+                {renderContent()}
+              </Suspense>
+            </TabErrorBoundary>
           </div>
         </main>
       </div>
@@ -1248,19 +1256,6 @@ export default function App() {
             </div>
 
             <div className="mt-4 space-y-2.5">
-              <button
-                onClick={openHomeHighlightEditor}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 hover:text-emerald-950 border border-amber-100 text-emerald-900 font-sans text-xs font-bold transition-all text-left"
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="p-1 rounded bg-amber-200/70 text-emerald-800">
-                    <Edit className="h-3.5 w-3.5" />
-                  </div>
-                  <span>Sửa điểm nhấn trang chủ</span>
-                </div>
-                <span className="text-[10px] text-amber-700">&rarr;</span>
-              </button>
-
               <button
                 onClick={() => {
                   openChangeCredsModal();
