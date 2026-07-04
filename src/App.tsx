@@ -4,7 +4,7 @@ import Footer from "./components/Footer";
 import Hero from "./components/Hero";
 import { sampleNews, sampleClubs, sampleStudents, classSchedules } from "./data";
 import { NewsItem, SchoolClub, StudentScore, ClassSchedule } from "./types";
-import { Sparkles, Shield, Eye, EyeOff, Check, X, User, Key, RefreshCw, LogOut, Settings, Mail } from "lucide-react";
+import { Sparkles, Shield, Eye, EyeOff, Check, X, User, Key, RefreshCw, LogOut, Settings, Mail, Edit } from "lucide-react";
 import {
   buildStructuredData,
   getPagePath,
@@ -35,6 +35,7 @@ const contentCacheKeys = [
   "lvt_schedules",
   "lvt_about_milestones",
   "lvt_about_leaders",
+  "lvt_home_highlight_content",
   "lvt_teachers",
   "lvt_added_lookup_classes",
   "lvt_admission_instructions",
@@ -410,6 +411,19 @@ export default function App() {
     }
   };
 
+  const openHomeHighlightEditor = () => {
+    const shouldSwitchHome = activeTab !== "home";
+    if (shouldSwitchHome) {
+      navigateToTab("home");
+    }
+
+    window.setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("lvt-open-home-highlight-editor"));
+    }, shouldSwitchHome ? 200 : 0);
+
+    setShowAdminMenuModal(false);
+  };
+
   const openChangeCredsModal = () => {
     setCredsError("");
     setCredsSuccess("");
@@ -655,6 +669,13 @@ export default function App() {
               <span>ĐANG Ở CHẾ ĐỘ QUẢN TRỊ VIÊN. Bạn có thể tự do chỉnh sửa trực tiếp mọi nội dung, tin tức, học sinh, CLB và thời khóa biểu!</span>
             </div>
             <div className="flex items-center space-x-2 shrink-0 sm:ml-4">
+              <button
+                onClick={openHomeHighlightEditor}
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-emerald-950 border border-emerald-900/20 rounded hover:bg-amber-100 transition-colors text-[10px] font-bold"
+              >
+                <Edit className="h-3 w-3" />
+                <span>Sửa Điểm Nhấn Trang Chủ</span>
+              </button>
               <button
                 onClick={openChangeCredsModal}
                 className="px-2 py-0.5 bg-emerald-950 text-amber-400 border border-emerald-900 rounded hover:bg-emerald-900 transition-colors text-[10px] font-bold"
@@ -1225,6 +1246,19 @@ export default function App() {
             </div>
 
             <div className="mt-4 space-y-2.5">
+              <button
+                onClick={openHomeHighlightEditor}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 hover:text-emerald-950 border border-amber-100 text-emerald-900 font-sans text-xs font-bold transition-all text-left"
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="p-1 rounded bg-amber-200/70 text-emerald-800">
+                    <Edit className="h-3.5 w-3.5" />
+                  </div>
+                  <span>Sửa điểm nhấn trang chủ</span>
+                </div>
+                <span className="text-[10px] text-amber-700">&rarr;</span>
+              </button>
+
               <button
                 onClick={() => {
                   openChangeCredsModal();
