@@ -13,7 +13,11 @@ export type SeoPage = {
 
 export const SITE_BASE_URL = "https://truongthlevantampongdrang-lab.github.io/truongthlevantampongdrang/";
 export const SITE_BASE_PATH = "/truongthlevantampongdrang/";
-export const SITE_NAME = "Trường Tiểu học Lê Văn Tám";
+export const SITE_ROOT_URL = "https://truongthlevantampongdrang-lab.github.io";
+export const SITE_NAME = "Trang thông tin điện tử";
+export const SCHOOL_NAME = "Trường Tiểu học Lê Văn Tám";
+export const DEFAULT_TITLE = "Trường Tiểu học Lê Văn Tám - Xã Pơng Drang, Đắk Lắk";
+export const DEFAULT_DESCRIPTION = "Trang thông tin điện tử Trường Tiểu học Lê Văn Tám - Xã Pơng Drang, huyện Krông Búk, tỉnh Đắk Lắk. Cập nhật tin tức, thông báo, hoạt động giáo dục, tuyển sinh, văn bản và chuyển đổi số.";
 export const SCHOOL_EMAIL = "truongthlevantampongdrang@gmail.com";
 export const SCHOOL_PHONE = "0262.387.1234";
 export const SCHOOL_ADDRESS = "Buôn Ea Đơng, xã Pơng Drang, tỉnh Đắk Lắk, Việt Nam";
@@ -75,12 +79,12 @@ export function buildStructuredData(activePage: SeoPage) {
       "@context": "https://schema.org",
       "@type": "School",
       "@id": `${SITE_BASE_URL}#school`,
-      name: SITE_NAME,
+      name: SCHOOL_NAME,
       alternateName: "TH Lê Văn Tám Pơng Drang",
       url: SITE_BASE_URL,
       logo: logoUrl,
       image: logoUrl,
-      description: SEO_PAGES[0].description,
+      description: DEFAULT_DESCRIPTION,
       email: SCHOOL_EMAIL,
       telephone: SCHOOL_PHONE,
       address: {
@@ -95,7 +99,7 @@ export function buildStructuredData(activePage: SeoPage) {
       "@context": "https://schema.org",
       "@type": "Organization",
       "@id": `${SITE_BASE_URL}#organization`,
-      name: SITE_NAME,
+      name: SCHOOL_NAME,
       url: SITE_BASE_URL,
       logo: logoUrl,
       email: SCHOOL_EMAIL,
@@ -107,7 +111,8 @@ export function buildStructuredData(activePage: SeoPage) {
       "@type": "WebSite",
       "@id": `${SITE_BASE_URL}#website`,
       name: SITE_NAME,
-      url: SITE_BASE_URL,
+      alternateName: SCHOOL_NAME,
+      url: SITE_ROOT_URL,
       inLanguage: "vi-VN",
       publisher: {
         "@id": `${SITE_BASE_URL}#organization`

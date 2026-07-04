@@ -126,7 +126,7 @@ export default function Assistant() {
           body: JSON.stringify({ messages: updatedMessages }),
         });
 
-        // Check if we received HTML (like a 404 page from static hosting like GitHub Pages) instead of JSON
+        // Check if we received HTML (like a 404 page from static hosting like Trang thông tin điện tử) instead of JSON
         const contentType = response.headers.get("content-type");
         if (response.status === 404 || (contentType && !contentType.includes("application/json"))) {
           if (clientApiKey) {
@@ -168,7 +168,7 @@ export default function Assistant() {
       setErrorText(
         clientApiKey 
           ? `Lỗi kết nối Gemini trực tiếp: ${err.message || "Vui lòng kiểm tra lại Key."}`
-          : "Không tìm thấy máy chủ backend và chưa cấu hình Khoá API trực tiếp. Nếu bạn đang chạy trên GitHub Pages, vui lòng vào Bảng điều khiển Quản trị -> Cấu hình & Đổi mật khẩu để thêm Khoá Gemini API."
+          : "Không tìm thấy máy chủ backend và chưa cấu hình Khoá API trực tiếp. Nếu bạn đang chạy trên Trang thông tin điện tử, vui lòng vào Bảng điều khiển Quản trị -> Cấu hình & Đổi mật khẩu để thêm Khoá Gemini API."
       );
     } finally {
       setIsLoading(false);

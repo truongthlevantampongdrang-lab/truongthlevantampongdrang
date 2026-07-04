@@ -26,4 +26,4 @@ Allow: /
 Sitemap: https://truongthlevantampongdrang-lab.github.io/truongthlevantampongdrang/sitemap.xml
 
 Lưu ý:
-Nếu URL GitHub Pages khác, hãy sửa lại link sitemap cho đúng.
+Nếu URL Trang thông tin điện tử khác, hãy sửa lại link sitemap cho đúng.

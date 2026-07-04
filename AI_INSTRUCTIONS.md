@@ -3,15 +3,15 @@
 ## Thông tin dự án
 Website: Trường TH Lê Văn Tám - Pơng Drang
 Repository: truongthlevantampongdrang
-Nền tảng chạy: GitHub Pages
+Nền tảng chạy: Trang thông tin điện tử
 Công nghệ: Vite + TypeScript
 
 ## Mục tiêu
-AI chỉ được chỉnh sửa website theo yêu cầu của người dùng, không tự ý thay đổi cấu trúc quan trọng, không làm hỏng GitHub Pages.
+AI chỉ được chỉnh sửa website theo yêu cầu của người dùng, không tự ý thay đổi cấu trúc quan trọng, không làm hỏng Trang thông tin điện tử.
 
 ## Quy tắc bắt buộc khi sửa website
 1. Giữ nguyên tên trường: Trường TH Lê Văn Tám - Pơng Drang.
-2. Không đổi tên repository, không đổi cấu hình GitHub Pages nếu không được yêu cầu.
+2. Không đổi tên repository, không đổi cấu hình Trang thông tin điện tử nếu không được yêu cầu.
 3. Không xóa các file SEO quan trọng: index.html, sitemap.xml, robots.txt, manifest.webmanifest, google*.html.
 4. Không xóa thư mục .github/workflows.
 5. Không xóa public, src, assets.
@@ -36,7 +36,7 @@ AI chỉ được chỉnh sửa website theo yêu cầu của người dùng, kh
 - src/: mã nguồn chính
 - public/: file tĩnh, ảnh, robots, sitemap, manifest
 - assets/: tài nguyên hình ảnh hoặc dữ liệu phụ
-- .github/workflows/main.yml: tự động đưa website lên GitHub Pages
+- .github/workflows/main.yml: tự động đưa website lên Trang thông tin điện tử
 - AI_INSTRUCTIONS.md: quy tắc làm việc cho AI
 - PROMPT_FOR_AI_STUDIO.md: prompt dùng khi yêu cầu Google AI Studio sửa website
 

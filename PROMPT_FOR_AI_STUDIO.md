@@ -5,7 +5,7 @@ Bạn là AI hỗ trợ phát triển website Trường TH Lê Văn Tám - Pơng
 Trước khi sửa, hãy đọc kỹ file AI_INSTRUCTIONS.md.
 
 Yêu cầu chung:
-- Website chạy trên GitHub Pages.
+- Website chạy trên Trang thông tin điện tử.
 - Công nghệ dự án là Vite + TypeScript.
 - Không làm hỏng cấu hình deploy.
 - Không xóa file SEO, Google Search Console, robots.txt, sitemap.xml.

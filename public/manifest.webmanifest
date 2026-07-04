@@ -1,7 +1,7 @@
 {
-  "name": "Trường Tiểu học Lê Văn Tám - Pơng Drang",
-  "short_name": "TH Lê Văn Tám",
-  "description": "Cổng thông tin điện tử Trường Tiểu học Lê Văn Tám, xã Pơng Drang, tỉnh Đắk Lắk.",
+  "name": "Trang thông tin điện tử",
+  "short_name": "Trường Tiểu học Lê Văn Tám",
+  "description": "Trang thông tin điện tử Trường Tiểu học Lê Văn Tám - Xã Pơng Drang, Đắk Lắk",
   "id": "/truongthlevantampongdrang/",
   "start_url": "/truongthlevantampongdrang/",
   "scope": "/truongthlevantampongdrang/",

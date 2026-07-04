@@ -11,12 +11,14 @@ import { NewsItem, SchoolClub, StudentScore, ClassSchedule } from "./types";
 import { Sparkles, Shield, Eye, EyeOff, Check, X, User, Key, RefreshCw, LogOut, Settings, Mail } from "lucide-react";
 import {
   buildStructuredData,
+  DEFAULT_DESCRIPTION,
   getPagePath,
   getPageUrl,
   getSeoPage,
   getSeoPageByPath,
   SEO_PAGES,
   SITE_BASE_PATH,
+  SITE_NAME,
   upsertLink,
   upsertMeta
 } from "./seo";
@@ -227,14 +229,20 @@ export default function App() {
   useEffect(() => {
     const page = getSeoPage(activeTab);
     const pageUrl = getPageUrl(page);
+    const pageDescription = activeTab === "home" ? DEFAULT_DESCRIPTION : page.description;
     document.title = page.title;
-    upsertMeta('meta[name="description"]', { name: "description", content: page.description });
+    upsertMeta('meta[name="description"]', { name: "description", content: pageDescription });
     upsertMeta('meta[name="keywords"]', { name: "keywords", content: page.keywords });
     upsertMeta('meta[property="og:title"]', { property: "og:title", content: page.title });
-    upsertMeta('meta[property="og:description"]', { property: "og:description", content: page.description });
+    upsertMeta('meta[property="og:description"]', { property: "og:description", content: pageDescription });
     upsertMeta('meta[property="og:url"]', { property: "og:url", content: pageUrl });
+    upsertMeta('meta[property="og:site_name"]', { property: "og:site_name", content: SITE_NAME });
     upsertMeta('meta[name="twitter:title"]', { name: "twitter:title", content: page.title });
-    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description", content: page.description });
+    upsertMeta('meta[name="twitter:description"]', { name: "twitter:description", content: pageDescription });
+    upsertMeta('meta[name="application-name"]', { name: "application-name", content: SITE_NAME });
+    upsertMeta('meta[name="apple-mobile-web-app-title"]', { name: "apple-mobile-web-app-title", content: SITE_NAME });
+    upsertMeta('meta[name="generator"]', { name: "generator", content: SITE_NAME });
+    upsertMeta('meta[name="robots"]', { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" });
     upsertLink('link[rel="canonical"]', { rel: "canonical", href: pageUrl });
 
     const schema = document.getElementById("structured-data") || document.createElement("script");
@@ -886,7 +894,7 @@ export default function App() {
                   <span>Cấu hình Trợ lý AI (Gemini Key)</span>
                 </h4>
                 <p className="text-[10px] text-slate-500 leading-normal">
-                  Nếu bạn triển khai lên **GitHub Pages** (hoặc static host), điền key ở đây để Trợ lý AI hoạt động trực tiếp từ trình duyệt mà không cần máy chủ.
+                  Nếu bạn triển khai lên **Trang thông tin điện tử** (hoặc static host), điền key ở đây để Trợ lý AI hoạt động trực tiếp từ trình duyệt mà không cần máy chủ.
                 </p>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-0.5">
@@ -905,7 +913,7 @@ export default function App() {
               <div className="rounded-2xl bg-blue-50/40 p-3 border border-blue-100/60 space-y-2 mt-2">
                 <h4 className="text-[11px] font-bold text-blue-800 uppercase tracking-wider flex items-center space-x-1">
                   <Settings className="h-3 w-3 text-blue-600" />
-                  <span>Đồng bộ nội dung lên GitHub Pages</span>
+                  <span>Đồng bộ nội dung lên Trang thông tin điện tử</span>
                 </h4>
                 <p className="text-[10px] text-slate-500 leading-normal">
                   Dán GitHub token có quyền Contents: Read and write để các nội dung quản trị được xuất bản cho mọi thiết bị.

@@ -1,6 +1,6 @@
 {
-  "name": "Trường Tiểu học Lê Văn Tám",
-  "description": "Cổng thông tin điện tử Trường Tiểu học Lê Văn Tám, xã Pơng Drang, tỉnh Đắk Lắk. Tích hợp tra cứu điểm và Trợ lý Học tập AI.",
+  "name": "Trang thông tin điện tử",
+  "description": "Trang thông tin điện tử Trường Tiểu học Lê Văn Tám - Xã Pơng Drang, huyện Krông Búk, tỉnh Đắk Lắk. Cập nhật tin tức, thông báo, hoạt động giáo dục, tuyển sinh, văn bản và chuyển đổi số.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
