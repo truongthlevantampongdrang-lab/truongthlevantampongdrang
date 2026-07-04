@@ -774,78 +774,7 @@
       "rank": "Hoàn thành tốt"
     }
   ],
-  "schedules": [
-    {
-      "className": "Lớp 5A - GVCN: Thầy Lê Anh Tuấn",
-      "days": [
-        {
-          "day": "Thứ 2",
-          "subjects": [
-            "Chào cờ",
-            "Toán",
-            "Tiếng Việt",
-            "Lịch sử & Địa lý",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 3",
-          "subjects": [
-            "Tiếng Việt",
-            "Toán",
-            "Khoa học",
-            "Tiếng Anh",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 4",
-          "subjects": [
-            "Toán",
-            "Tiếng Việt",
-            "Tin học",
-            "Thể dục",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 5",
-          "subjects": [
-            "Tiếng Việt",
-            "Toán",
-            "Kỹ thuật",
-            "Tiếng Anh",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 6",
-          "subjects": [
-            "Lịch sử & Địa lý",
-            "Mỹ thuật",
-            "Âm nhạc",
-            "Sinh hoạt lớp",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        }
-      ]
-    }
-  ],
+  "schedules": [],
   "aboutLeaders": [
     {
       "id": "principal",
@@ -932,5 +861,5 @@
     "ctaDescription": "Bạn có biết? Trang web này tích hợp hệ thống quản lý đăng ký tuyển sinh trực tuyến và tra cứu kết quả học tập của các con cực kỳ tiện lợi cho quý phụ huynh. Đồng thời, Trợ lý AI Lê Văn Tám luôn sẵn sàng giải đáp mọi thắc mắc học tập của học sinh.",
     "ctaButtonText": "Trải Nghiệm Cổng Tra Cứu Ngay"
   },
-  "updatedAt": "2026-07-04T10:44:00.160Z"
+  "updatedAt": "2026-07-04T10:45:05.548Z"
 }
