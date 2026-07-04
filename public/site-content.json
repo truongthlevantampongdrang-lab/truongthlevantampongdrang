@@ -776,76 +776,6 @@
   ],
   "schedules": [
     {
-      "className": "Lớp 4A - GVCN: Cô H'Nghia Niê",
-      "days": [
-        {
-          "day": "Thứ 2",
-          "subjects": [
-            "Chào cờ",
-            "Toán",
-            "Tiếng Việt",
-            "Lịch sử & Địa lý",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 3",
-          "subjects": [
-            "Tiếng Việt",
-            "Tiếng Việt",
-            "Khoa học",
-            "Tiếng Anh",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 4",
-          "subjects": [
-            "Toán",
-            "Đạo đức",
-            "Tin học",
-            "Thể dục",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 5",
-          "subjects": [
-            "Tiếng Việt",
-            "Toán",
-            "Công nghệ",
-            "Tiếng Anh",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        },
-        {
-          "day": "Thứ 6",
-          "subjects": [
-            "Khoa học",
-            "Mỹ thuật",
-            "Âm nhạc",
-            "Sinh hoạt lớp",
-            "Hoạt động TN",
-            "Tự học",
-            "Thể dục",
-            "CLB Tự chọn"
-          ]
-        }
-      ]
-    },
-    {
       "className": "Lớp 5A - GVCN: Thầy Lê Anh Tuấn",
       "days": [
         {
@@ -1005,5 +935,5 @@
     "ctaDescription": "Bạn có biết? Trang web này tích hợp hệ thống quản lý đăng ký tuyển sinh trực tuyến và tra cứu kết quả học tập của các con cực kỳ tiện lợi cho quý phụ huynh. Đồng thời, Trợ lý AI Lê Văn Tám luôn sẵn sàng giải đáp mọi thắc mắc học tập của học sinh.",
     "ctaButtonText": "Trải Nghiệm Cổng Tra Cứu Ngay"
   },
-  "updatedAt": "2026-07-04T09:48:00.094Z"
+  "updatedAt": "2026-07-04T09:52:01.711Z"
 }
