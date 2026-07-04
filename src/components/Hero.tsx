@@ -18,6 +18,12 @@ type HighlightContent = {
   ctaButtonText: string;
 };
 
+type HighlightEditTarget =
+  | { type: "all" }
+  | { type: "section" }
+  | { type: "card"; index: number }
+  | { type: "banner" };
+
 interface HeroProps {
   onNavigate: (tab: string) => void;
   isAdminMode: boolean;
@@ -102,6 +108,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
   const [hasLoadedHighlightContent, setHasLoadedHighlightContent] = useState(false);
   const [showEditHighlightsModal, setShowEditHighlightsModal] = useState(false);
+  const [highlightEditTarget, setHighlightEditTarget] = useState<HighlightEditTarget>({ type: "all" });
   const [highlightContent, setHighlightContent] = useState<HighlightContent>(() => {
     const saved = localStorage.getItem("lvt_home_highlight_content");
     if (saved) {
@@ -148,11 +155,12 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
   const highlights = highlightContent.items;
 
-  const openHighlightEditor = () => {
+  const openHighlightEditor = (target: HighlightEditTarget = { type: "all" }) => {
     setHighlightForm({
       ...highlightContent,
       items: highlightContent.items.map((item) => ({ ...item })),
     });
+    setHighlightEditTarget(target);
     setShowEditHighlightsModal(true);
   };
 
@@ -196,6 +204,15 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     });
     setShowEditHighlightsModal(false);
   };
+
+  const highlightModalTitle =
+    highlightEditTarget.type === "section"
+      ? "Chỉnh Sửa Tiêu Đề Khu Vực Điểm Nhấn"
+      : highlightEditTarget.type === "card"
+        ? `Chỉnh Sửa Thẻ Điểm Nhấn ${highlightEditTarget.index + 1}`
+        : highlightEditTarget.type === "banner"
+          ? "Chỉnh Sửa Banner Màu Cam"
+          : "Chỉnh Sửa Toàn Bộ Khu Vực Điểm Nhấn";
 
   return (
     <div className="space-y-16 py-6 relative">
@@ -374,7 +391,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
               Quản trị: Sửa toàn bộ nội dung trong khu vực điểm nhấn và banner cam bên dưới
             </div>
             <button
-              onClick={openHighlightEditor}
+              onClick={() => openHighlightEditor({ type: "all" })}
               className="inline-flex items-center justify-center space-x-1 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-emerald-950 shadow-md transition-all hover:bg-amber-400 active:scale-95"
             >
               <Edit className="h-3.5 w-3.5" />
@@ -385,7 +402,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
         <div className="text-center space-y-2 relative">
           {canEditHighlights && (
             <button
-              onClick={openHighlightEditor}
+              onClick={() => openHighlightEditor({ type: "section" })}
               className="absolute right-0 top-0 hidden items-center space-x-1 rounded-xl bg-emerald-950 px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-emerald-900 active:scale-95 sm:inline-flex"
               title="Sửa tiêu đề và nội dung điểm nhấn"
             >
@@ -409,7 +426,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
             >
               {canEditHighlights && (
                 <button
-                  onClick={openHighlightEditor}
+                  onClick={() => openHighlightEditor({ type: "card", index: i })}
                   className="absolute right-3 top-3 z-10 inline-flex items-center space-x-1 rounded-full bg-amber-500 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-950 shadow-md transition-all hover:bg-amber-400 active:scale-95"
                   title={`Sửa thẻ điểm nhấn ${i + 1}`}
                 >
@@ -442,7 +459,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
       <section className="rounded-3xl bg-amber-500 text-emerald-950 p-8 sm:p-10 shadow-lg relative overflow-hidden">
         {canEditHighlights && (
           <button
-            onClick={openHighlightEditor}
+            onClick={() => openHighlightEditor({ type: "banner" })}
             className="absolute right-4 top-4 z-20 inline-flex items-center space-x-1 rounded-xl bg-white px-3 py-2 text-xs font-bold text-emerald-950 shadow-md transition-all hover:bg-amber-50 active:scale-95"
             title="Sửa banner màu cam"
           >
@@ -473,7 +490,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
           <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl border border-emerald-50 animate-in zoom-in-95 duration-250">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-sans text-base font-bold text-slate-900">
-                Chỉnh Sửa Nội Dung Điểm Nhấn
+                {highlightModalTitle}
               </h3>
               <button
                 onClick={() => setShowEditHighlightsModal(false)}
@@ -485,6 +502,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
             <form onSubmit={handleSaveHighlights} className="mt-4 space-y-4">
               <div className="max-h-[70vh] overflow-y-auto pr-1 space-y-5">
+                {(highlightEditTarget.type === "all" || highlightEditTarget.type === "section") && (
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 space-y-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800">Tiêu đề khu vực</h4>
                   <div>
@@ -512,8 +530,17 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                     />
                   </div>
                 </div>
+                )}
 
-                {highlightForm.items.map((item, idx) => (
+                {highlightForm.items.map((item, idx) => {
+                  if (highlightEditTarget.type === "section" || highlightEditTarget.type === "banner") {
+                    return null;
+                  }
+                  if (highlightEditTarget.type === "card" && highlightEditTarget.index !== idx) {
+                    return null;
+                  }
+
+                  return (
                   <div key={idx} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 space-y-3">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800">
                       Thẻ điểm nhấn {idx + 1}
@@ -589,8 +616,10 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                       />
                     </div>
                   </div>
-                ))}
+                  );
+                })}
 
+                {(highlightEditTarget.type === "all" || highlightEditTarget.type === "banner") && (
                 <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 space-y-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800">Banner màu cam</h4>
                   <div>
@@ -630,6 +659,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                     />
                   </div>
                 </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 border-t border-slate-100 pt-4">
