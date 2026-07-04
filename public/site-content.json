@@ -970,5 +970,12 @@
     "Cô Trịnh Thị Oanh"
   ],
   "admissionRegistrations": [],
-  "updatedAt": "2026-07-04T00:38:21.572Z"
+  "realtimeQaMessages": [
+    {
+      "role": "school",
+      "content": "Xin chào quý phụ huynh. Nhà trường sẵn sàng hỗ trợ về tuyển sinh, hồ sơ và lịch học.",
+      "time": "14:18"
+    }
+  ],
+  "updatedAt": "2026-07-04T00:39:04.184Z"
 }
