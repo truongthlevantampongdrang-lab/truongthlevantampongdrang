@@ -4,7 +4,8 @@ import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { getSharedGeminiApiKey } from "../geminiConfig";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
-import { editableImages } from "../editableAssets";
+import { sampleImages } from "../editableAssets";
+import ImageUploadField from "./ImageUploadField";
 
 interface AboutProps {
   isAdminMode: boolean;
@@ -75,14 +76,14 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
         id: "principal",
         name: "Cô Ngô Thị Mai",
         title: "Hiệu trưởng",
-        avatar: editableImages.principal,
+        avatar: sampleImages.principal,
         desc: "Chịu trách nhiệm chung, định hướng chiến lược và xây dựng văn hóa trường học hạnh phúc."
       },
       {
         id: "vice_principal",
         name: "Thầy Y Ring Niê",
         title: "Phó Hiệu trưởng",
-        avatar: editableImages.leaderMale,
+        avatar: sampleImages.leaderMale,
         desc: "Phụ trách công tác chuyên môn, kiểm định chất lượng dạy học và phong trào thi đua."
       }
     ];
@@ -254,11 +255,11 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   const getAvatarByName = (name: string): string => {
     const lower = name.toLowerCase();
     if (lower.startsWith("cô") || lower.startsWith("bà") || lower.startsWith("chị") || lower.includes("thị")) {
-      return editableImages.leaderFemale;
+      return sampleImages.leaderFemale;
     } else if (lower.startsWith("thầy") || lower.startsWith("ông") || lower.startsWith("anh")) {
-      return editableImages.leaderMale;
+      return sampleImages.leaderMale;
     }
-    return editableImages.leaderNeutral;
+    return sampleImages.leaderNeutral;
   };
 
   const handleSaveLeader = (e: FormEvent) => {
@@ -928,18 +929,15 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  URL Ảnh đại diện
-                </label>
-                <input
-                  type="text"
-                  value={leaderForm.avatar}
-                  onChange={(e) => setLeaderForm({ ...leaderForm, avatar: e.target.value })}
-                  placeholder="Để trống để tự động lấy avatar theo giới tính"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                />
-              </div>
+              <ImageUploadField
+                label="Ảnh đại diện"
+                value={leaderForm.avatar}
+                fallback={getAvatarByName(leaderForm.name)}
+                aspect="square"
+                outputWidth={500}
+                outputHeight={500}
+                onChange={(avatar) => setLeaderForm({ ...leaderForm, avatar })}
+              />
 
               <div>
                 <div className="flex items-center justify-between mb-1">

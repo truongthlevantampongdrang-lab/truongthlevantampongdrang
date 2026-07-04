@@ -1,5 +1,5 @@
 import { NewsItem, SchoolClub, StudentScore } from "./types";
-import { editableImages } from "./editableAssets";
+import { sampleImages } from "./editableAssets";
 
 export const sampleNews: NewsItem[] = [
   {
@@ -9,7 +9,7 @@ export const sampleNews: NewsItem[] = [
     date: "15/10/2025",
     excerpt: "Sáng nay, trong không khí tưng bừng, thầy và trò Trường Tiểu học Lê Văn Tám (xã Pơng Drang) đã long trọng tổ chức lễ khai mạc Hội khỏe Phù Đổng cấp trường.",
     content: "Hội khỏe Phù Đổng năm nay quy tụ hơn 400 vận động viên nhí từ các khối lớp tham gia tranh tài ở các bộ môn: Điền kinh, Cờ vua, Bóng đá mini, Bơi lội và Kéo co. Đây là ngày hội thể thao lớn giúp các em học sinh rèn luyện thể chất, nâng cao sức khỏe theo gương Bác Hồ vĩ đại, đồng thời tuyển chọn các tài năng tham dự Hội khỏe Phù Đổng cấp Tỉnh sắp tới.",
-    image: editableImages.news1,
+    image: sampleImages.news1,
     author: "Thầy Nguyễn Văn Hùng"
   },
   {
@@ -19,7 +19,7 @@ export const sampleNews: NewsItem[] = [
     date: "08/09/2025",
     excerpt: "Nhà trường phối hợp cùng Ban An toàn giao thông xã Pơng Drang trao tặng hơn 150 chiếc mũ bảo hiểm đạt chuẩn cho các em học sinh vừa bước vào lớp 1.",
     content: "Nhằm giáo dục ý thức chấp hành luật lệ giao thông ngay từ khi còn nhỏ, Ban Giám hiệu trường Tiểu học Lê Văn Tám đã tổ chức chương trình truyền thông kỹ năng tham gia giao thông an toàn và tặng mũ bảo hiểm cho toàn thể học sinh lớp 1. Hoạt động nhận được sự hưởng ứng nhiệt tình từ quý bậc phụ huynh, góp phần xây dựng cổng trường an toàn, văn minh.",
-    image: editableImages.news2,
+    image: sampleImages.news2,
     author: "Cô H'Nghia Niê"
   },
   {
@@ -29,7 +29,7 @@ export const sampleNews: NewsItem[] = [
     date: "01/06/2026",
     excerpt: "Trường Tiểu học Lê Văn Tám thông báo kế hoạch và hồ sơ đăng ký tuyển sinh đối với học sinh sinh năm 2020 cư trú tại xã Pơng Drang.",
     content: "Thực hiện kế hoạch của Sở Giáo dục và Đào tạo Tỉnh Đắk Lắk, Trường Tiểu học Lê Văn Tám thông báo nhận hồ sơ tuyển sinh lớp 1 từ ngày 15/06/2026 đến hết ngày 15/07/2026. Chỉ tiêu tuyển sinh là 160 học sinh được chia thành 4 lớp. Hồ sơ bao gồm: Đơn xin học (theo mẫu), bản sao giấy khai sinh hợp lệ, bản phô-tô sổ hộ khẩu hoặc giấy xác nhận cư trú. Phụ huynh có thể nộp trực tiếp tại Văn phòng nhà trường hoặc đăng ký trực tuyến trên cổng thông tin này.",
-    image: editableImages.news3,
+    image: sampleImages.news3,
     author: "Văn phòng Tuyển sinh"
   },
   {
@@ -39,7 +39,7 @@ export const sampleNews: NewsItem[] = [
     date: "20/11/2025",
     excerpt: "Chào mừng ngày Nhà giáo Việt Nam 20/11, nhà trường đã tổ chức buổi ngoại khóa giúp các em trải nghiệm nhịp xoang, tiếng chiêng và nét đẹp truyền thống địa phương.",
     content: "Đắk Lắk là cái nôi của Không gian văn hóa Cồng chiêng Tây Nguyên. Để giúp các em học sinh gìn giữ cội nguồn văn hóa, trường Tiểu học Lê Văn Tám đã mời các nghệ nhân buôn làng đến giao lưu, hướng dẫn học sinh cách gõ chiêng tre, múa xoang truyền thống. Buổi trải nghiệm vô cùng sôi nổi, khơi gợi tình yêu quê hương đất nước trong tâm hồn các em nhỏ.",
-    image: editableImages.news4,
+    image: sampleImages.news4,
     author: "Cô Lê Thị Mai"
   },
   {
@@ -49,7 +49,7 @@ export const sampleNews: NewsItem[] = [
     date: "20/11/2025",
     excerpt: "Lễ kỷ niệm tràn ngập hoa, điểm 10 dâng tặng thầy cô cùng những tiết mục văn nghệ đặc sắc từ các chi đội.",
     content: "Trong đợt thi đua chào mừng ngày 20/11, liên đội trường đã gặt hái được hàng nghìn điểm 10 xuất sắc và nhiều giờ học tốt. Nhà trường đã vinh danh, trao thưởng cho các tập thể lớp xuất sắc và các thầy cô giáo có thành tích vượt trội trong hội giảng cấp Tỉnh. Sự kiện thắt chặt tình thầy trò ấm áp dưới mái trường.",
-    image: editableImages.news5,
+    image: sampleImages.news5,
     author: "Ban Thi Đua"
   }
 ];
@@ -108,7 +108,7 @@ export const sampleStudents: StudentScore[] = [
     name: "Nguyễn Minh Anh",
     className: "4A",
     birthDate: "12/04/2016",
-    avatar: editableImages.studentGirl,
+    avatar: sampleImages.studentGirl,
     grades: {
       math: 9.5,
       vietnamese: 9.0,
@@ -126,7 +126,7 @@ export const sampleStudents: StudentScore[] = [
     name: "H'Riêk Niê",
     className: "4A",
     birthDate: "23/08/2016",
-    avatar: editableImages.studentGirl,
+    avatar: sampleImages.studentGirl,
     grades: {
       math: 8.5,
       vietnamese: 9.5,
@@ -144,7 +144,7 @@ export const sampleStudents: StudentScore[] = [
     name: "Trần Hoàng Nam",
     className: "4B",
     birthDate: "05/11/2016",
-    avatar: editableImages.studentBoy,
+    avatar: sampleImages.studentBoy,
     grades: {
       math: 8.0,
       vietnamese: 7.5,
@@ -162,7 +162,7 @@ export const sampleStudents: StudentScore[] = [
     name: "Y Blôk Êban",
     className: "5C",
     birthDate: "14/01/2015",
-    avatar: editableImages.studentBoy,
+    avatar: sampleImages.studentBoy,
     grades: {
       math: 9.0,
       vietnamese: 8.5,

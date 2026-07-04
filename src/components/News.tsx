@@ -1,7 +1,8 @@
 import { useState, FormEvent, MouseEvent } from "react";
 import { NewsItem } from "../types";
 import { Calendar, User, Search, Eye, X, BookOpen, AlertCircle, Sparkles, Edit, Trash2, Plus, Save } from "lucide-react";
-import { editableImages } from "../editableAssets";
+import { sampleImages } from "../editableAssets";
+import ImageUploadField from "./ImageUploadField";
 
 interface NewsProps {
   isAdminMode: boolean;
@@ -44,7 +45,7 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
       category: "Tin tức",
       excerpt: "",
       content: "",
-      image: editableImages.news2,
+      image: sampleImages.news2,
       author: "Văn phòng nhà trường"
     });
     setShowEditForm(true);
@@ -100,7 +101,7 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
         date: todayStr,
         excerpt: newsForm.excerpt || newsForm.content.slice(0, 150) + "...",
         content: newsForm.content,
-        image: newsForm.image || editableImages.news2,
+        image: newsForm.image || sampleImages.news2,
         author: newsForm.author || "Ban Biên Tập"
       };
       updateNewsList([newArticle, ...newsList]);
@@ -401,18 +402,15 @@ export default function News({ isAdminMode, newsList, updateNewsList }: NewsProp
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  URL Ảnh đại diện bài viết
-                </label>
-                <input
-                  type="text"
-                  value={newsForm.image}
-                  onChange={(e) => setNewsForm({ ...newsForm, image: e.target.value })}
-                  placeholder="/truongthlevantampongdrang/editable-images/news-1.png"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                />
-              </div>
+              <ImageUploadField
+                label="Ảnh đại diện bài viết"
+                value={newsForm.image}
+                fallback={sampleImages.news1}
+                aspect="wide"
+                outputWidth={900}
+                outputHeight={506}
+                onChange={(image) => setNewsForm({ ...newsForm, image })}
+              />
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">

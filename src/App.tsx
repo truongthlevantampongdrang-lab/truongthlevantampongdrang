@@ -17,7 +17,7 @@ import {
   upsertMeta
 } from "./seo";
 import { getGitHubPublishToken, loadSiteContent, patchSiteContent, setGitHubPublishToken } from "./siteContentSync";
-import { editableImages } from "./editableAssets";
+import { sampleImages } from "./editableAssets";
 
 const About = lazy(() => import("./components/About"));
 const News = lazy(() => import("./components/News"));
@@ -57,7 +57,7 @@ const syncContentCacheVersion = () => {
 const currentPrincipal = {
   name: "Cô Ngô Thị Mai",
   title: "Hiệu trưởng Nhà trường",
-  avatar: editableImages.principal,
+  avatar: sampleImages.principal,
 };
 
 const isOldPrincipalName = (value: unknown) => {

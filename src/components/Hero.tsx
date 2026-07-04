@@ -1,7 +1,8 @@
 import { GraduationCap, Users, Award, BookOpen, ChevronRight, Sparkles, Star, Edit, X, Save } from "lucide-react";
 import { useEffect, useState, FormEvent } from "react";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
-import { editableImages } from "../editableAssets";
+import { sampleImages } from "../editableAssets";
+import ImageUploadField from "./ImageUploadField";
 
 type HighlightItem = {
   title: string;
@@ -86,19 +87,19 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     {
       title: "Gìn Giữ Bản Sắc Tây Nguyên",
       description: "Tự hào duy trì Câu lạc bộ Cồng Chiêng Nhí & các tiết học nhạc cụ dân tộc truyền thống, tôn vinh di sản văn hóa Đắk Lắk.",
-      image: editableImages.highlight1,
+      image: sampleImages.highlight1,
       tag: "Văn Hóa",
     },
     {
       title: "Công Nghệ & Trí Tuệ Nhân Tạo",
       description: "Ứng dụng công nghệ giáo dục hiện đại và tích hợp Trợ lý AI 'Lê Văn Tám' đồng hành 24/7 cùng phụ huynh và học sinh.",
-      image: editableImages.highlight2,
+      image: sampleImages.highlight2,
       tag: "Sáng Tạo",
     },
     {
       title: "Môi Trường Học Hạnh Phúc",
       description: "Mỗi ngày đến trường là một ngày vui. Khuôn viên xanh, phòng lớp thân thiện, bồi dưỡng toàn diện Trí - Thể - Mỹ.",
-      image: editableImages.highlight3,
+      image: sampleImages.highlight3,
       tag: "Phát Triển",
     }
     ],
@@ -287,7 +288,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                 {/* Main image card */}
                 <div className="relative rounded-xl overflow-hidden border-2 border-emerald-800 bg-emerald-950 aspect-[4/3] shadow-2xl">
                   <img
-                    src={editableImages.heroMain}
+                    src={sampleImages.heroMain}
                     alt="School classroom"
                     fetchPriority="high"
                     decoding="async"
@@ -582,23 +583,20 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                        URL ảnh
-                      </label>
-                      <input
-                        type="text"
-                        value={item.image}
-                        onChange={(e) => {
-                          const items = highlightForm.items.map((current, itemIndex) =>
-                            itemIndex === idx ? { ...current, image: e.target.value } : current
-                          );
-                          setHighlightForm({ ...highlightForm, items });
-                        }}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
-                        required
-                      />
-                    </div>
+                    <ImageUploadField
+                      label="Ảnh thẻ"
+                      value={item.image}
+                      fallback={[sampleImages.highlight1, sampleImages.highlight2, sampleImages.highlight3][idx]}
+                      aspect="wide"
+                      outputWidth={900}
+                      outputHeight={506}
+                      onChange={(image) => {
+                        const items = highlightForm.items.map((current, itemIndex) =>
+                          itemIndex === idx ? { ...current, image } : current
+                        );
+                        setHighlightForm({ ...highlightForm, items });
+                      }}
+                    />
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                         Mô tả thẻ
@@ -803,17 +801,15 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Đường dẫn Ảnh chân dung (URL)
-                </label>
-                <input
-                  type="text"
-                  value={schoolForm.principalAvatar}
-                  onChange={(e) => setSchoolForm({ ...schoolForm, principalAvatar: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                />
-              </div>
+              <ImageUploadField
+                label="Ảnh chân dung"
+                value={schoolForm.principalAvatar}
+                fallback={sampleImages.principal}
+                aspect="square"
+                outputWidth={500}
+                outputHeight={500}
+                onChange={(principalAvatar) => setSchoolForm({ ...schoolForm, principalAvatar })}
+              />
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
