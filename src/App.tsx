@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode, useState, useEffect, FormEvent } from "react";
+import { Component, ErrorInfo, ReactNode, useState, useEffect, useLayoutEffect, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
@@ -201,6 +201,26 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("lvt_is_admin", isAdminMode ? "true" : "false");
   }, [isAdminMode]);
+
+  useLayoutEffect(() => {
+    const removeLegacyHighlightButtons = () => {
+      document.querySelectorAll("button").forEach((button) => {
+        const text = button.textContent || "";
+        if (
+          text.includes("Sửa Điểm Nhấn Trang Chủ") ||
+          text.includes("Sửa điểm nhấn trang chủ")
+        ) {
+          button.remove();
+        }
+      });
+    };
+
+    removeLegacyHighlightButtons();
+    const observer = new MutationObserver(removeLegacyHighlightButtons);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const page = getSeoPage(activeTab);
@@ -709,9 +729,43 @@ export default function App() {
 
         {/* Main Content Stage container */}
         <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="animate-in fade-in duration-300">
-            <TabErrorBoundary key={activeTab}>
-              {renderContent()}
+          <div>
+            <TabErrorBoundary>
+              <div className={activeTab === "home" ? "block" : "hidden"}>
+                <Hero
+                  onNavigate={navigateToTab}
+                  isAdminMode={isAdminMode}
+                  schoolInfo={schoolInfo}
+                  updateSchoolInfo={updateSchoolInfo}
+                />
+              </div>
+              <div className={activeTab === "about" ? "block" : "hidden"}>
+                <About
+                  isAdminMode={isAdminMode}
+                  schoolInfo={schoolInfo}
+                />
+              </div>
+              <div className={activeTab === "news" ? "block" : "hidden"}>
+                <News
+                  isAdminMode={isAdminMode}
+                  newsList={news}
+                  updateNewsList={updateNews}
+                />
+              </div>
+              <div className={activeTab === "portal" ? "block" : "hidden"}>
+                <Portal
+                  isAdminMode={isAdminMode}
+                  clubs={clubs}
+                  updateClubs={updateClubs}
+                  students={students}
+                  updateStudents={updateStudents}
+                  schedules={schedules}
+                  updateSchedules={updateSchedules}
+                />
+              </div>
+              <div className={activeTab === "assistant" ? "block" : "hidden"}>
+                <Assistant />
+              </div>
             </TabErrorBoundary>
           </div>
         </main>
