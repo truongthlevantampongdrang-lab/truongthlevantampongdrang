@@ -130,7 +130,6 @@ export default function Assistant() {
         const contentType = response.headers.get("content-type");
         if (response.status === 404 || (contentType && !contentType.includes("application/json"))) {
           if (clientApiKey) {
-            console.log("Backend failed or not found (static page). Trying client-side direct calling...");
             assistantReply = await callGeminiDirectly(updatedMessages, clientApiKey);
             success = true;
           } else {
@@ -144,7 +143,6 @@ export default function Assistant() {
           } else {
             // Backend returned 500 or error, check if client key can save us
             if (clientApiKey) {
-              console.log("Backend returned an error. Attempting fallback direct Gemini API call...");
               assistantReply = await callGeminiDirectly(updatedMessages, clientApiKey);
               success = true;
             } else {
@@ -155,7 +153,6 @@ export default function Assistant() {
       } catch (backendErr) {
         // Network error - e.g. server is down or running on fully static client-only host
         if (clientApiKey) {
-          console.log("Backend connection failed. Attempting direct Gemini API call...", backendErr);
           assistantReply = await callGeminiDirectly(updatedMessages, clientApiKey);
           success = true;
         } else {
