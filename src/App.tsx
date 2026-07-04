@@ -1,7 +1,11 @@
-import { Component, ErrorInfo, lazy, ReactNode, Suspense, useState, useEffect, FormEvent } from "react";
+import { Component, ErrorInfo, ReactNode, useState, useEffect, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
+import About from "./components/About";
+import News from "./components/News";
+import Portal from "./components/Portal";
+import Assistant from "./components/Assistant";
 import { sampleNews, sampleClubs, sampleStudents, classSchedules } from "./data";
 import { NewsItem, SchoolClub, StudentScore, ClassSchedule } from "./types";
 import { Sparkles, Shield, Eye, EyeOff, Check, X, User, Key, RefreshCw, LogOut, Settings, Mail } from "lucide-react";
@@ -18,11 +22,6 @@ import {
 } from "./seo";
 import { getGitHubPublishToken, loadSiteContent, patchSiteContent, setGitHubPublishToken } from "./siteContentSync";
 import { sampleImages } from "./editableAssets";
-
-const About = lazy(() => import("./components/About"));
-const News = lazy(() => import("./components/News"));
-const Portal = lazy(() => import("./components/Portal"));
-const Assistant = lazy(() => import("./components/Assistant"));
 
 declare const __APP_BUILD_ID__: string;
 
@@ -712,9 +711,7 @@ export default function App() {
         <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="animate-in fade-in duration-300">
             <TabErrorBoundary key={activeTab}>
-              <Suspense fallback={<div className="py-16 text-center text-sm font-semibold text-emerald-700">Dang tai noi dung...</div>}>
-                {renderContent()}
-              </Suspense>
+              {renderContent()}
             </TabErrorBoundary>
           </div>
         </main>
