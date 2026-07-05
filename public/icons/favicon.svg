@@ -1,9 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TH Le Van Tam">
-  <rect width="512" height="512" rx="96" fill="#047857"/>
-  <circle cx="256" cy="226" r="148" fill="#f8fafc"/>
-  <path d="M128 214 256 142l128 72-128 72-128-72Z" fill="#f59e0b"/>
-  <path d="M174 266v74c0 24 37 44 82 44s82-20 82-44v-74l-82 46-82-46Z" fill="#065f46"/>
-  <path d="M256 142v170" stroke="#022c22" stroke-width="18" stroke-linecap="round"/>
-  <circle cx="256" cy="142" r="18" fill="#fef3c7"/>
-  <text x="256" y="452" text-anchor="middle" font-family="Arial, sans-serif" font-size="58" font-weight="800" fill="#ffffff">LVT</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Truong Tieu hoc Le Van Tam">
+  <rect width="512" height="512" rx="92" fill="#f8fafc"/>
+  <path d="M76 438h360c16 0 28-12 28-28V232H48v178c0 16 12 28 28 28Z" fill="#f8d98e"/>
+  <path d="M86 224h340l-50-67H136l-50 67Z" fill="#ef3f32"/>
+  <path d="M194 438h124V266H194v172Z" fill="#ffe4a8"/>
+  <path d="M174 258h164l-82-87-82 87Z" fill="#fff4cf"/>
+  <path d="M154 164h204l-102-90-102 90Z" fill="#ef3f32"/>
+  <path d="M248 70h84v55h-84V70Z" fill="#ef3f32"/>
+  <path d="M248 64h18v105h-18V64Z" fill="#c7372e"/>
+  <circle cx="256" cy="247" r="39" fill="#ffffff" stroke="#e8ad54" stroke-width="12"/>
+  <path d="M256 224v24h22" fill="none" stroke="#d99843" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M218 438V336c0-22 17-39 38-39s38 17 38 39v102h-76Z" fill="#b9783e"/>
+  <path d="M256 300v138" stroke="#8a542d" stroke-width="8"/>
+  <rect x="96" y="282" width="44" height="62" rx="8" fill="#62b5d8"/>
+  <rect x="372" y="282" width="44" height="62" rx="8" fill="#62b5d8"/>
+  <rect x="96" y="366" width="44" height="56" rx="8" fill="#62b5d8"/>
+  <rect x="372" y="366" width="44" height="56" rx="8" fill="#62b5d8"/>
+  <path d="M39 438c0-27 22-49 49-49 12 0 23 4 31 11 7-18 24-30 44-30 26 0 47 21 47 47 0 8-2 15-5 21H39Z" fill="#37a857"/>
+  <path d="M307 438c-3-6-5-13-5-21 0-26 21-47 47-47 20 0 37 12 44 30 8-7 19-11 31-11 27 0 49 22 49 49H307Z" fill="#37a857"/>
 </svg>

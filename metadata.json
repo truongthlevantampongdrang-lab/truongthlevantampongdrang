@@ -1,5 +1,5 @@
 {
-  "name": "Trang thông tin điện tử",
+  "name": "Truong Tieu hoc Le Van Tam xa Pong Drang",
   "description": "Trang thông tin điện tử Trường Tiểu học Lê Văn Tám - Xã Pơng Drang, huyện Krông Búk, tỉnh Đắk Lắk. Cập nhật tin tức, thông báo, hoạt động giáo dục, tuyển sinh, văn bản và chuyển đổi số.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
