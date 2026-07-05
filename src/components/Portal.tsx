@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef } from "react";
+import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo } from "react";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -41,6 +41,9 @@ interface PortalProps {
 }
 
 type RealtimeQaMessage = { role: "parent" | "school"; content: string; time: string };
+
+const getQaMessageKey = (message: RealtimeQaMessage, index: number) =>
+  `${index}:${message.role}:${message.time}:${message.content}`;
 
 export default function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
@@ -181,6 +184,9 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   const [isQaOpen, setIsQaOpen] = useState(false);
   const [qaInput, setQaInput] = useState("");
   const qaMessagesEndRef = useRef<HTMLDivElement>(null);
+  const previousLatestParentKeyRef = useRef("");
+  const [lastSeenParentQaKey, setLastSeenParentQaKey] = useState(() => localStorage.getItem("lvt_last_seen_parent_qa") || "");
+  const [qaAdminNotice, setQaAdminNotice] = useState<RealtimeQaMessage | null>(null);
   const [qaMessages, setQaMessages] = useState<RealtimeQaMessage[]>(() => {
     const saved = localStorage.getItem("lvt_realtime_qa_messages");
     if (saved) {
@@ -338,6 +344,44 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       qaMessagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [isQaOpen, qaMessages]);
+
+  const parentQaMessages = useMemo(
+    () => qaMessages
+      .map((message, index) => ({ message, key: getQaMessageKey(message, index) }))
+      .filter((item) => item.message.role === "parent"),
+    [qaMessages]
+  );
+  const latestParentQa = parentQaMessages[parentQaMessages.length - 1] || null;
+  const lastSeenParentIndex = parentQaMessages.findIndex((item) => item.key === lastSeenParentQaKey);
+  const unreadParentQaCount = isAdminMode
+    ? lastSeenParentIndex === -1
+      ? parentQaMessages.length
+      : Math.max(parentQaMessages.length - lastSeenParentIndex - 1, 0)
+    : 0;
+
+  useEffect(() => {
+    if (!isAdminMode || !latestParentQa) return;
+
+    if (!previousLatestParentKeyRef.current) {
+      previousLatestParentKeyRef.current = latestParentQa.key;
+      return;
+    }
+
+    if (previousLatestParentKeyRef.current !== latestParentQa.key) {
+      previousLatestParentKeyRef.current = latestParentQa.key;
+      if (!isQaOpen && latestParentQa.key !== lastSeenParentQaKey) {
+        setQaAdminNotice(latestParentQa.message);
+      }
+    }
+  }, [isAdminMode, isQaOpen, lastSeenParentQaKey, latestParentQa]);
+
+  useEffect(() => {
+    if (!isAdminMode || !isQaOpen || !latestParentQa) return;
+
+    setLastSeenParentQaKey(latestParentQa.key);
+    localStorage.setItem("lvt_last_seen_parent_qa", latestParentQa.key);
+    setQaAdminNotice(null);
+  }, [isAdminMode, isQaOpen, latestParentQa]);
 
   const saveSiteContent = (content: Record<string, unknown>) => {
     if (!hasLoadedSiteContent) return;
@@ -2331,6 +2375,22 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
 
       {/* Floating realtime Q&A */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
+        {isAdminMode && qaAdminNotice && !isQaOpen && (
+          <button
+            type="button"
+            onClick={() => setIsQaOpen(true)}
+            className="max-w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left shadow-xl shadow-amber-900/10"
+            title="Mở câu hỏi mới từ phụ huynh"
+          >
+            <div className="text-[10px] font-black uppercase text-amber-700">
+              Câu hỏi mới từ phụ huynh
+            </div>
+            <div className="mt-1 line-clamp-2 text-xs font-semibold text-amber-950">
+              {qaAdminNotice.content}
+            </div>
+          </button>
+        )}
+
         {isQaOpen && (
           <div className="w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-2xl animate-in slide-in-from-bottom-3 fade-in duration-200">
             <div className="flex items-center justify-between bg-emerald-700 px-4 py-3 text-white">
@@ -2341,6 +2401,11 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                   <p className="text-[10px] font-semibold text-emerald-50">
                     {isAdminMode ? "Chế độ phản hồi quản trị" : "Phụ huynh gửi câu hỏi trực tiếp"}
                   </p>
+                  {isAdminMode && unreadParentQaCount > 0 && (
+                    <p className="mt-0.5 text-[10px] font-black text-amber-200">
+                      {unreadParentQaCount} câu hỏi phụ huynh chưa đọc
+                    </p>
+                  )}
                 </div>
               </div>
               <button
@@ -2396,10 +2461,15 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
         <button
           type="button"
           onClick={() => setIsQaOpen(prev => !prev)}
-          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-700 text-white shadow-xl shadow-emerald-900/20 hover:bg-emerald-800 active:scale-95"
+          className="relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-700 text-white shadow-xl shadow-emerald-900/20 hover:bg-emerald-800 active:scale-95"
           title="Hỏi đáp với nhà trường"
         >
           <MessageCircle className="h-6 w-6" />
+          {unreadParentQaCount > 0 && (
+            <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-red-600 px-1 text-[10px] font-black leading-none text-white">
+              {unreadParentQaCount > 9 ? "9+" : unreadParentQaCount}
+            </span>
+          )}
         </button>
       </div>
 
