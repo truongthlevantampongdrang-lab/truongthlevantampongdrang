@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect, ChangeEvent, DragEvent } from "react";
+import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef } from "react";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -39,6 +39,8 @@ interface PortalProps {
   schedules: ClassSchedule[];
   updateSchedules: (items: ClassSchedule[]) => void;
 }
+
+type RealtimeQaMessage = { role: "parent" | "school"; content: string; time: string };
 
 export default function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
@@ -178,7 +180,8 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   const [instructionDraft, setInstructionDraft] = useState(admissionInstructions);
   const [isQaOpen, setIsQaOpen] = useState(false);
   const [qaInput, setQaInput] = useState("");
-  const [qaMessages, setQaMessages] = useState<{ role: "parent" | "school"; content: string; time: string }[]>(() => {
+  const qaMessagesEndRef = useRef<HTMLDivElement>(null);
+  const [qaMessages, setQaMessages] = useState<RealtimeQaMessage[]>(() => {
     const saved = localStorage.getItem("lvt_realtime_qa_messages");
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
@@ -282,7 +285,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
           setAdmissionInstructions(String(content.admissionInstructions));
         }
         if (content.realtimeQaMessages) {
-          setQaMessages(content.realtimeQaMessages as { role: "parent" | "school"; content: string; time: string }[]);
+          setQaMessages(content.realtimeQaMessages as RealtimeQaMessage[]);
         }
         if (content.addedLookupClasses && !localStorage.getItem("lvt_added_lookup_classes")) {
           setAddedLookupClasses(content.addedLookupClasses as string[]);
@@ -301,6 +304,40 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasLoadedSiteContent || (!isQaOpen && !isAdminMode)) return;
+
+    let isMounted = true;
+    const syncRealtimeQaMessages = async () => {
+      try {
+        const content = await loadSiteContent();
+        const incoming = content.realtimeQaMessages;
+        if (!isMounted || !Array.isArray(incoming)) return;
+
+        setQaMessages((current) => {
+          const next = incoming as RealtimeQaMessage[];
+          return JSON.stringify(current) === JSON.stringify(next) ? current : next;
+        });
+      } catch (error) {
+        console.warn("Realtime Q&A sync skipped:", error);
+      }
+    };
+
+    syncRealtimeQaMessages();
+    const syncTimer = window.setInterval(syncRealtimeQaMessages, 2500);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(syncTimer);
+    };
+  }, [hasLoadedSiteContent, isQaOpen, isAdminMode]);
+
+  useEffect(() => {
+    if (isQaOpen) {
+      qaMessagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [isQaOpen, qaMessages]);
 
   const saveSiteContent = (content: Record<string, unknown>) => {
     if (!hasLoadedSiteContent) return;
@@ -2334,6 +2371,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                   </div>
                 );
               })}
+              <div ref={qaMessagesEndRef} />
             </div>
 
             <form onSubmit={handleSendQaMessage} className="flex items-center gap-2 border-t border-slate-100 bg-white p-3">

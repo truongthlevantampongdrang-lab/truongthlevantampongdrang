@@ -43,21 +43,21 @@ export const setGitHubPublishToken = (token: string) => {
 
 export const loadSiteContent = async (): Promise<SiteContent> => {
   try {
-    const response = await fetch(getPublicContentUrl(), { cache: "no-store" });
-    if (response.ok && isJsonResponse(response)) {
-      return await response.json();
-    }
-  } catch (error) {
-    console.warn("Public site content load skipped:", error);
-  }
-
-  try {
     const response = await fetch("/api/site-content", { cache: "no-store" });
     if (response.ok && isJsonResponse(response)) {
       return await response.json();
     }
   } catch (error) {
     console.warn("API site content load skipped:", error);
+  }
+
+  try {
+    const response = await fetch(getPublicContentUrl(), { cache: "no-store" });
+    if (response.ok && isJsonResponse(response)) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.warn("Public site content load skipped:", error);
   }
 
   return {};
