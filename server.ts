@@ -24,9 +24,16 @@ app.use((_req, res, next) => {
 });
 
 type AdminSession = { csrfToken: string; expiresAt: number };
+type PublishSyncResult = {
+  enabled: boolean;
+  repository?: string;
+  branch?: string;
+  error?: string;
+};
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
 const MAX_PATCH_KEYS = 30;
+const publicContentFilePath = path.join(process.cwd(), "public", "site-content.json");
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 const assistantAttempts = new Map<string, { count: number; resetAt: number }>();
 const adminSessions = new Map<string, AdminSession>();
@@ -270,6 +277,12 @@ app.use(requireSameOrigin);
 
 const contentFilePath = path.join(process.cwd(), "data", "site-content.json");
 
+const getPublicSiteContent = (content: Record<string, unknown>) => {
+  const publicContent = { ...content };
+  delete publicContent.admissionRegistrations;
+  return publicContent;
+};
+
 async function readSiteContent() {
   try {
     const raw = await readFile(contentFilePath, "utf8");
@@ -285,7 +298,68 @@ async function readSiteContent() {
 async function writeSiteContent(content: Record<string, unknown>) {
   await mkdir(path.dirname(contentFilePath), { recursive: true });
   await writeFile(contentFilePath, JSON.stringify(content, null, 2), "utf8");
+
+  const publicContent = getPublicSiteContent(content);
+  await mkdir(path.dirname(publicContentFilePath), { recursive: true });
+  await writeFile(publicContentFilePath, JSON.stringify(publicContent, null, 2), "utf8");
 }
+
+const getGitHubSyncConfig = () => {
+  const token = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || "";
+  const repository = process.env.GITHUB_SYNC_REPOSITORY || process.env.GITHUB_REPOSITORY || "";
+  const branch = process.env.GITHUB_SYNC_BRANCH || "main";
+  const contentPath = process.env.GITHUB_SYNC_CONTENT_PATH || "public/site-content.json";
+  const enabled = process.env.GITHUB_SYNC_ENABLED === "true";
+
+  if (!enabled || !token || !repository) {
+    return null;
+  }
+
+  return { token, repository, branch, contentPath };
+};
+
+const syncPublicContentToGitHub = async (content: Record<string, unknown>): Promise<PublishSyncResult> => {
+  const config = getGitHubSyncConfig();
+  if (!config) {
+    return { enabled: false };
+  }
+
+  const apiUrl = `https://api.github.com/repos/${config.repository}/contents/${encodeURIComponent(config.contentPath).replace(/%2F/g, "/")}`;
+  const headers = {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${config.token}`,
+    "Content-Type": "application/json",
+    "User-Agent": "lvt-school-admin-sync",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+
+  const currentResponse = await fetch(`${apiUrl}?ref=${encodeURIComponent(config.branch)}`, { headers });
+  const currentData = currentResponse.ok ? await currentResponse.json() : {};
+
+  if (!currentResponse.ok && currentResponse.status !== 404) {
+    throw new Error(`GitHub read failed: ${currentResponse.status}`);
+  }
+
+  const body = {
+    message: "Update public site content from admin panel",
+    branch: config.branch,
+    content: Buffer.from(JSON.stringify(getPublicSiteContent(content), null, 2), "utf8").toString("base64"),
+    ...(currentData.sha ? { sha: currentData.sha } : {}),
+  };
+
+  const updateResponse = await fetch(apiUrl, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!updateResponse.ok) {
+    const errorText = await updateResponse.text().catch(() => "");
+    throw new Error(`GitHub update failed: ${updateResponse.status} ${errorText.slice(0, 200)}`);
+  }
+
+  return { enabled: true, repository: config.repository, branch: config.branch };
+};
 
 const getReadableSiteContent = async (req: express.Request) => {
   const content = await readSiteContent();
@@ -297,9 +371,7 @@ const getReadableSiteContent = async (req: express.Request) => {
     return content;
   }
 
-  const publicContent = { ...content };
-  delete publicContent.admissionRegistrations;
-  return publicContent;
+  return getPublicSiteContent(content);
 };
 
 app.get("/api/site-content", async (req, res) => {
@@ -387,7 +459,16 @@ app.patch("/api/site-content", requireAdmin, validateSiteContentPatch, async (re
     const current = await readSiteContent();
     const next = { ...current, ...req.body };
     await writeSiteContent(next);
-    return res.json({ success: true, content: next });
+
+    let publishSync: PublishSyncResult = { enabled: false };
+    try {
+      publishSync = await syncPublicContentToGitHub(next);
+    } catch (syncError: any) {
+      console.error("GitHub Site Content Sync Error:", syncError);
+      publishSync = { enabled: true, error: "Khong the day noi dung len GitHub Pages." };
+    }
+
+    return res.json({ success: true, content: next, publishSync });
   } catch (error: any) {
     console.error("Write Site Content Error:", error);
     return res.status(500).json({ error: "Khong the luu noi dung website." });
