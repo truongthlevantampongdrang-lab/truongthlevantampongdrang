@@ -58,6 +58,8 @@ const allowedSiteContentKeys = new Set([
 let adminUsername = process.env.ADMIN_USERNAME || "";
 let adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || "";
 
+const envFilePath = path.join(process.cwd(), ".env");
+
 const safeEqual = (left: string, right: string) => {
   const leftBuffer = Buffer.from(left);
   const rightBuffer = Buffer.from(right);
@@ -90,9 +92,57 @@ const verifyPassword = (password: string, storedHash: string) => {
   return safeEqual(hashPasswordSha256(password), storedHash);
 };
 
-if (!adminPasswordHash && process.env.ADMIN_PASSWORD) {
-  adminPasswordHash = createPasswordHash(process.env.ADMIN_PASSWORD);
-}
+const applyAdminCredentials = (env: Record<string, string | undefined>) => {
+  adminUsername = env.ADMIN_USERNAME || "";
+  adminPasswordHash = env.ADMIN_PASSWORD_HASH || "";
+
+  if (!adminPasswordHash && env.ADMIN_PASSWORD) {
+    adminPasswordHash = createPasswordHash(env.ADMIN_PASSWORD);
+  }
+};
+
+const refreshAdminCredentialsFromEnv = async () => {
+  try {
+    const raw = await readFile(envFilePath, "utf8");
+    const parsed = dotenv.parse(raw);
+    applyAdminCredentials({ ...process.env, ...parsed });
+  } catch (error: any) {
+    if (error?.code !== "ENOENT") {
+      console.warn("Cannot refresh admin credentials from .env:", error);
+    }
+  }
+};
+
+const quoteEnvValue = (value: string) => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+
+const upsertEnvValue = (raw: string, key: string, value: string) => {
+  const line = `${key}=${quoteEnvValue(value)}`;
+  const pattern = new RegExp(`^${key}=.*$`, "m");
+  if (pattern.test(raw)) {
+    return raw.replace(pattern, line);
+  }
+
+  return `${raw.replace(/\s*$/, "")}\n${line}\n`;
+};
+
+const persistAdminCredentialsToEnv = async (username: string, password: string, passwordHash: string) => {
+  let raw = "";
+  try {
+    raw = await readFile(envFilePath, "utf8");
+  } catch (error: any) {
+    if (error?.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  let nextRaw = upsertEnvValue(raw, "ADMIN_USERNAME", username);
+  nextRaw = upsertEnvValue(nextRaw, "ADMIN_PASSWORD", password);
+  nextRaw = upsertEnvValue(nextRaw, "ADMIN_PASSWORD_HASH", passwordHash);
+
+  await writeFile(envFilePath, nextRaw, "utf8");
+};
+
+applyAdminCredentials(process.env);
 
 const isAdminConfigured = () => Boolean(adminUsername && adminPasswordHash);
 
@@ -418,7 +468,11 @@ app.post("/api/admin/login", async (req, res) => {
 
 app.post("/api/admin/change-credentials", requireAdmin, async (req, res) => {
   try {
+    await refreshAdminCredentialsFromEnv();
+
     const { currentUsername, currentPassword, newUsername, newPassword } = req.body || {};
+    const nextUsername = String(newUsername || "").trim();
+    const nextPassword = String(newPassword || "");
     const isCurrentValid =
       safeEqual(String(currentUsername || ""), adminUsername) &&
       verifyPassword(String(currentPassword || ""), adminPasswordHash);
@@ -427,17 +481,20 @@ app.post("/api/admin/change-credentials", requireAdmin, async (req, res) => {
       return res.status(401).json({ error: "Thong tin quan tri hien tai khong chinh xac." });
     }
 
-    if (!String(newUsername || "").trim() || String(newPassword || "").length < 10) {
+    if (!nextUsername || nextPassword.length < 10) {
       return res.status(400).json({ error: "Ten dang nhap moi khong duoc trong va mat khau can it nhat 10 ky tu." });
     }
 
-    adminUsername = String(newUsername).trim();
-    adminPasswordHash = createPasswordHash(String(newPassword));
+    const nextPasswordHash = createPasswordHash(nextPassword);
+    await persistAdminCredentialsToEnv(nextUsername, nextPassword, nextPasswordHash);
+
+    adminUsername = nextUsername;
+    adminPasswordHash = nextPasswordHash;
     adminSessions.clear();
 
     return res.json({
       success: true,
-      message: "Da doi thong tin quan tri cho phien may chu hien tai. Hay cap nhat bien moi truong de luu ben vung.",
+      message: "Da doi va luu thong tin quan tri vao cau hinh may chu.",
     });
   } catch (error: any) {
     console.error("Change Credentials Error:", error);
