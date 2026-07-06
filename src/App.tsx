@@ -481,10 +481,18 @@ export default function App() {
   const updateStudents = (items: StudentScore[]) => setStudents(items);
   const updateSchedules = (items: ClassSchedule[]) => setSchedules(items);
 
+  const closeTransientAdminUi = () => {
+    setShowChangeCredsModal(false);
+    setShowLoginModal(false);
+    setShowAdminMenuModal(false);
+    setShowForgotPassword(false);
+  };
+
   const navigateToTab = (tab: string) => {
     const page = SEO_PAGES.find((item) => item.tab === tab) || SEO_PAGES[0];
     const nextPath = getPagePath(page);
 
+    closeTransientAdminUi();
     setActiveTab(page.tab);
     if (window.location.pathname !== nextPath) {
       window.history.pushState({ tab: page.tab }, "", nextPath);
