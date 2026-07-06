@@ -1,7 +1,6 @@
 import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo } from "react";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
-import * as XLSX from "xlsx";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
@@ -44,6 +43,32 @@ type RealtimeQaMessage = { role: "parent" | "school"; content: string; time: str
 
 const getQaMessageKey = (message: RealtimeQaMessage, index: number) =>
   `${index}:${message.role}:${message.time}:${message.content}`;
+
+const MAX_IMPORT_FILE_SIZE = 1024 * 1024;
+const MAX_IMPORT_ROWS = 1000;
+const MAX_IMPORT_TEXT_LENGTH = 250000;
+
+const escapeCsvCell = (value: unknown) => {
+  const text = String(value ?? "");
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+const downloadCsv = (rows: Record<string, unknown>[], filename: string) => {
+  if (rows.length === 0) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.map(escapeCsvCell).join(","),
+    ...rows.map((row) => headers.map((header) => escapeCsvCell(row[header])).join(",")),
+  ].join("\r\n");
+
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 export default function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
@@ -537,51 +562,42 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   const handleVnEduFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImportError("");
+
+    if (file.size > MAX_IMPORT_FILE_SIZE) {
+      setImportError("File quá lớn. Vui lòng tải file tối đa 1MB để đảm bảo an toàn.");
+      e.target.value = "";
+      return;
+    }
 
     if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = new Uint8Array(event.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array" });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          
-          const jsonRows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
-          const textLines = jsonRows.map(row => {
-            if (!row || !Array.isArray(row)) return "";
-            return row
-              .filter(cell => cell !== null && cell !== undefined)
-              .map(cell => String(cell).trim())
-              .join(" ");
-          }).filter(line => line.trim().length > 0).join("\n");
-
-          setVnEduInputText(textLines);
-          handleParseVnEdu(textLines);
-        } catch (error: any) {
-          setImportError("Lỗi đọc file Excel: " + error.message);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    } else {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        if (text) {
-          setVnEduInputText(text);
-          handleParseVnEdu(text);
-        }
-      };
-      reader.readAsText(file);
+      setImportError("Excel import is disabled for security. Please export the sheet as .csv or .txt and upload it again.");
+      e.target.value = "";
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        setVnEduInputText(text);
+        handleParseVnEdu(text);
+      }
+    };
+    reader.readAsText(file);
   };
 
   const handleParseVnEdu = (textToParse: string) => {
     setImportError("");
     setParsedStudents([]);
 
+    if (textToParse.length > MAX_IMPORT_TEXT_LENGTH) {
+      setImportError("Nội dung nhập quá dài. Vui lòng chia nhỏ file hoặc bảng điểm trước khi nhập.");
+      return;
+    }
+
     if (!textToParse.trim()) {
-      setImportError("Vui lòng dán văn bản bảng điểm hoặc tải file (.csv, .txt, .xlsx, .xls) lên.");
+      setImportError("Vui lòng dán văn bản bảng điểm hoặc tải file .csv/.txt lên.");
       return;
     }
 
@@ -1156,10 +1172,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
       "Trạng thái": reg.status || "Đã tiếp nhận",
       "Thời gian đăng ký": reg.registeredAt
     }));
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Dang ky tuyen sinh");
-    XLSX.writeFile(workbook, `danh-sach-dang-ky-tuyen-sinh-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    downloadCsv(rows, `danh-sach-dang-ky-tuyen-sinh-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   const handleSendQaMessage = (e: FormEvent) => {
@@ -2327,7 +2340,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
                   >
                     <Download className="h-4 w-4" />
-                    <span>Tải danh sách Excel</span>
+                    <span>Tải danh sách CSV</span>
                   </button>
                 )}
               </div>
@@ -2901,12 +2914,12 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                 {/* Upload File Section */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Chọn File từ máy tính (.txt, .csv, .xlsx, .xls):
+                    Chọn File từ máy tính (.txt, .csv):
                   </label>
                   <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-xl p-3 text-center transition-all cursor-pointer">
                     <input
                       type="file"
-                      accept=".txt,.csv,.xlsx,.xls"
+                      accept=".txt,.csv"
                       onChange={handleVnEduFileUpload}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />

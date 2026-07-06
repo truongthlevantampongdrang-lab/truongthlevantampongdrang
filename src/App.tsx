@@ -22,7 +22,16 @@ import {
   upsertLink,
   upsertMeta
 } from "./seo";
-import { getGitHubPublishToken, loadSiteContent, patchSiteContent, setGitHubPublishToken } from "./siteContentSync";
+import {
+  changeAdminCredentials,
+  clearAdminSession,
+  getAdminSessionToken,
+  loadSiteContent,
+  loginAdmin,
+  logoutAdmin,
+  patchSiteContent,
+  requestPasswordReset
+} from "./siteContentSync";
 import { sampleImages } from "./editableAssets";
 
 declare const __APP_BUILD_ID__: string;
@@ -128,8 +137,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem("lvt_is_admin");
-    return saved === "true";
+    return Boolean(getAdminSessionToken());
   });
 
   // Load / Save Admin Credentials Modal States
@@ -147,7 +155,6 @@ export default function App() {
   const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
     return localStorage.getItem("lvt_gemini_api_key") || "";
   });
-  const [githubPublishToken, setGithubPublishToken] = useState<string>(() => getGitHubPublishToken());
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
 
   // Floating Admin Login & Options States
@@ -199,10 +206,6 @@ export default function App() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("lvt_is_admin", isAdminMode ? "true" : "false");
-  }, [isAdminMode]);
 
   useLayoutEffect(() => {
     const removeLegacyHighlightButtons = () => {
@@ -416,10 +419,6 @@ export default function App() {
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem("lvt_is_admin", String(isAdminMode));
-  }, [isAdminMode]);
-
-  useEffect(() => {
     localStorage.setItem("lvt_school_info", JSON.stringify(schoolInfo));
     saveSiteContent({ schoolInfo });
   }, [schoolInfo, hasLoadedSiteContent]);
@@ -470,41 +469,19 @@ export default function App() {
   const openChangeCredsModal = () => {
     setCredsError("");
     setCredsSuccess("");
-    const storedUsername = localStorage.getItem("lvt_admin_username") || "admin";
-    const storedPassword = localStorage.getItem("lvt_admin_password") || "admin";
-    setNewUsername(storedUsername);
-    setNewPassword(storedPassword);
-    setConfirmNewPassword(storedPassword);
+    setNewUsername("");
+    setNewPassword("");
+    setConfirmNewPassword("");
     setCurrentUsername("");
     setCurrentPassword("");
     setGeminiApiKey(localStorage.getItem("lvt_gemini_api_key") || "");
-    setGithubPublishToken(getGitHubPublishToken());
     setShowChangeCredsModal(true);
   };
 
-  const handleChangeCredsSubmit = (e: FormEvent) => {
+  const handleChangeCredsSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setCredsError("");
     setCredsSuccess("");
-
-    const storedUsername = localStorage.getItem("lvt_admin_username") || "admin";
-    const storedPassword = localStorage.getItem("lvt_admin_password") || "admin";
-
-    const isCustomized = localStorage.getItem("lvt_admin_username") !== null || localStorage.getItem("lvt_admin_password") !== null;
-
-    let isCurrentValid = false;
-    if (isCustomized) {
-      isCurrentValid = currentUsername === storedUsername && currentPassword === storedPassword;
-    } else {
-      const isUserMatch = currentUsername === "admin" || currentUsername === "";
-      const isPassMatch = currentPassword === "admin" || currentPassword === "123456" || currentPassword === "";
-      isCurrentValid = isUserMatch && isPassMatch;
-    }
-
-    if (!isCurrentValid) {
-      setCredsError("Tên đăng nhập hoặc mật khẩu hiện tại không chính xác!");
-      return;
-    }
 
     if (!newUsername.trim()) {
       setCredsError("Tên đăng nhập mới không được để trống!");
@@ -521,13 +498,21 @@ export default function App() {
       return;
     }
 
-    localStorage.setItem("lvt_admin_username", newUsername.trim());
-    localStorage.setItem("lvt_admin_password", newPassword);
+    try {
+      await changeAdminCredentials({
+        currentUsername,
+        currentPassword,
+        newUsername: newUsername.trim(),
+        newPassword,
+      });
+    } catch (error: any) {
+      setCredsError(error.message || "Không thể đổi thông tin quản trị.");
+      return;
+    }
+
     localStorage.setItem("lvt_gemini_api_key", geminiApiKey.trim());
-    setGitHubPublishToken(githubPublishToken);
-    patchSiteContent({ schoolInfo, footerInfo, news, clubs, students, schedules }).catch((error) => {
-      console.warn("Initial GitHub content publish failed:", error);
-    });
+    clearAdminSession();
+    setIsAdminMode(false);
 
     setCredsSuccess("Cấu hình tài khoản & Khoá API thành công!");
 
@@ -544,32 +529,19 @@ export default function App() {
     }, 1500);
   };
 
-  const handleLoginSubmit = (e: FormEvent) => {
+  const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoginError("");
 
-    const storedUsername = localStorage.getItem("lvt_admin_username") || "admin";
-    const storedPassword = localStorage.getItem("lvt_admin_password") || "admin";
-
-    const isCustomized = localStorage.getItem("lvt_admin_username") !== null || localStorage.getItem("lvt_admin_password") !== null;
-
-    let isValid = false;
-    if (isCustomized) {
-      isValid = loginUsername === storedUsername && loginPassword === storedPassword;
-    } else {
-      const isValidUser = loginUsername === "admin" || loginUsername === "";
-      const isValidPass = loginPassword === "admin" || loginPassword === "123456" || loginPassword === "";
-      isValid = isValidUser && isValidPass;
-    }
-
-    if (isValid) {
+    try {
+      await loginAdmin(loginUsername, loginPassword);
       setIsAdminMode(true);
       setShowLoginModal(false);
       setLoginUsername("");
       setLoginPassword("");
       setLoginError("");
-    } else {
-      setLoginError("Tên đăng nhập hoặc mật khẩu quản trị không chính xác!");
+    } catch (error: any) {
+      setLoginError(error.message || "Tên đăng nhập hoặc mật khẩu quản trị không chính xác!");
     }
   };
 
@@ -580,9 +552,6 @@ export default function App() {
     setForgotError("");
     setSmtpConfigured(false);
 
-    const storedUsername = localStorage.getItem("lvt_admin_username") || "admin";
-    const storedPassword = localStorage.getItem("lvt_admin_password") || "admin";
-
     setForgotStepText("🔄 Đang khởi tạo kết nối an toàn...");
     await new Promise((resolve) => setTimeout(resolve, 800));
 
@@ -592,33 +561,14 @@ export default function App() {
     setForgotStepText("📧 Đang kết nối với máy chủ khôi phục...");
     
     try {
-      const response = await fetch("/api/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: "uongdonganh@gmail.com",
-          username: storedUsername,
-          password: storedPassword,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Lỗi máy chủ khi gửi email.");
-      }
-
-      const data = await response.json();
+      const data = await requestPasswordReset("uongdonganh@gmail.com");
       
       setForgotStepText("📬 Đang hoàn tất truyền dữ liệu...");
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       if (data.success) {
         setSmtpConfigured(!!data.smtpConfigured);
-        setRecoveredCredentials({
-          username: storedUsername,
-          password: storedPassword,
-        });
+        setRecoveredCredentials({ username: "", password: "" });
         setForgotSuccess(true);
       } else {
         setForgotError(data.error || "Gửi yêu cầu khôi phục thất bại.");
@@ -633,20 +583,16 @@ export default function App() {
   };
 
   const handleResetToDefault = () => {
-    if (confirm("Bạn có chắc chắn muốn khôi phục tài khoản và mật khẩu quản trị về mặc định không?\n(Mặc định: tài khoản 'admin' và mật khẩu 'admin')")) {
-      localStorage.removeItem("lvt_admin_username");
-      localStorage.removeItem("lvt_admin_password");
-      
-      // Reset editing states
-      setCurrentUsername("");
-      setCurrentPassword("");
-      setNewUsername("");
-      setNewPassword("");
-      setConfirmNewPassword("");
-      
-      alert("Đã khôi phục tài khoản quản trị về mặc định (admin/admin) thành công!");
-      setShowAdminMenuModal(false);
-    }
+    alert("Để đặt lại tài khoản quản trị, hãy cập nhật ADMIN_USERNAME và ADMIN_PASSWORD trên máy chủ/deployment. Website không còn hỗ trợ mật khẩu mặc định.");
+    logoutAdmin();
+    setIsAdminMode(false);
+    setShowAdminMenuModal(false);
+  };
+
+  const handleAdminLogout = () => {
+    logoutAdmin();
+    setIsAdminMode(false);
+    setShowAdminMenuModal(false);
   };
 
   const renderContent = (tab = activeTab) => {
@@ -719,7 +665,7 @@ export default function App() {
                 ⚙️ Đổi Mật Khẩu/Tên Đăng Nhập
               </button>
               <button
-                onClick={() => setIsAdminMode(false)}
+                onClick={handleAdminLogout}
                 className="px-2 py-0.5 bg-emerald-950 text-white rounded hover:bg-emerald-900 transition-colors text-[10px]"
               >
                 Thoát Chế Độ
@@ -924,8 +870,9 @@ export default function App() {
                   </label>
                   <input
                     type="password"
-                    value={githubPublishToken}
-                    onChange={(e) => setGithubPublishToken(e.target.value)}
+                    value=""
+                    onChange={() => {}}
+                    disabled
                     placeholder="Dán token github_pat... hoặc ghp..."
                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
@@ -1322,8 +1269,7 @@ export default function App() {
 
               <button
                 onClick={() => {
-                  setIsAdminMode(false);
-                  setShowAdminMenuModal(false);
+                  handleAdminLogout();
                 }}
                 className="w-full flex items-center justify-between p-3 rounded-2xl bg-red-50 hover:bg-red-100 hover:text-red-900 border border-red-100/50 text-red-700 font-sans text-xs font-bold transition-all text-left"
               >

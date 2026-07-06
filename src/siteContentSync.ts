@@ -1,8 +1,4 @@
-const githubOwner = "truongthlevantampongdrang-lab";
-const githubRepo = "truongthlevantampongdrang";
-const githubBranch = "main";
-const githubContentPath = "public/site-content.json";
-const githubTokenKey = "lvt_github_token";
+const adminCsrfKey = "lvt_admin_csrf_token";
 
 type SiteContent = Record<string, unknown>;
 
@@ -15,30 +11,94 @@ const isJsonResponse = (response: Response) => {
   return (response.headers.get("content-type") || "").includes("application/json");
 };
 
-const parseGitHubContent = (content = "") => {
-  const binary = atob(content.replace(/\s/g, ""));
-  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-};
+export const getAdminSessionToken = () => sessionStorage.getItem(adminCsrfKey) || "";
 
-const encodeGitHubContent = (content: string) => {
-  const bytes = new TextEncoder().encode(content);
-  let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary);
-};
-
-export const getGitHubPublishToken = () => localStorage.getItem(githubTokenKey) || "";
-
-export const setGitHubPublishToken = (token: string) => {
-  const trimmedToken = token.trim();
-  if (trimmedToken) {
-    localStorage.setItem(githubTokenKey, trimmedToken);
+export const setAdminSessionToken = (csrfToken: string) => {
+  if (csrfToken) {
+    sessionStorage.setItem(adminCsrfKey, csrfToken);
   } else {
-    localStorage.removeItem(githubTokenKey);
+    sessionStorage.removeItem(adminCsrfKey);
   }
+};
+
+export const clearAdminSession = () => setAdminSessionToken("");
+
+export const getAuthorizedHeaders = () => {
+  const csrfToken = getAdminSessionToken();
+  return {
+    "Content-Type": "application/json",
+    ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+  };
+};
+
+export const loginAdmin = async (username: string, password: string) => {
+  const response = await fetch("/api/admin/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.csrfToken) {
+    throw new Error(data.error || "Khong the dang nhap quan tri.");
+  }
+
+  setAdminSessionToken(data.csrfToken);
+  return data;
+};
+
+export const logoutAdmin = async () => {
+  const csrfToken = getAdminSessionToken();
+  clearAdminSession();
+
+  if (!csrfToken) {
+    return;
+  }
+
+  await fetch("/api/admin/logout", {
+    method: "POST",
+    headers: { "X-CSRF-Token": csrfToken },
+  }).catch(() => {});
+};
+
+export const changeAdminCredentials = async (payload: {
+  currentUsername: string;
+  currentPassword: string;
+  newUsername: string;
+  newPassword: string;
+}) => {
+  const response = await fetch("/api/admin/change-credentials", {
+    method: "POST",
+    headers: getAuthorizedHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Khong the doi thong tin quan tri.");
+  }
+
+  clearAdminSession();
+  return data;
+};
+
+export const requestPasswordReset = async (email: string) => {
+  const response = await fetch("/api/forgot-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Khong the gui yeu cau dat lai mat khau.");
+  }
+
+  return data;
 };
 
 export const loadSiteContent = async (): Promise<SiteContent> => {
@@ -63,97 +123,17 @@ export const loadSiteContent = async (): Promise<SiteContent> => {
   return {};
 };
 
-const patchServerContent = async (patch: SiteContent) => {
-  try {
-    const response = await fetch("/api/site-content", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(patch),
-    });
-
-    return response.ok && isJsonResponse(response);
-  } catch (error) {
-    console.warn("API site content sync skipped:", error);
-    return false;
-  }
-};
-
-const publishContentToGitHub = async (patch: SiteContent) => {
-  const token = getGitHubPublishToken();
-  if (!token) {
-    return false;
-  }
-
-  const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/${githubContentPath}?ref=${githubBranch}`;
-  const headers = {
-    Accept: "application/vnd.github+json",
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-    "X-GitHub-Api-Version": "2022-11-28",
-  };
-
-  let sha = "";
-  let currentContent: SiteContent = {};
-
-  const currentResponse = await fetch(url, { headers });
-  if (currentResponse.ok) {
-    const currentFile = await currentResponse.json();
-    sha = currentFile.sha || "";
-    currentContent = JSON.parse(parseGitHubContent(currentFile.content || "{}"));
-  } else if (currentResponse.status !== 404) {
-    const errorText = await currentResponse.text();
-    throw new Error(`GitHub khong doc duoc file noi dung: ${errorText}`);
-  }
-
-  const currentComparable = { ...currentContent };
-  delete currentComparable.updatedAt;
-  const nextComparable = {
-    ...currentContent,
-    ...patch,
-  };
-  delete nextComparable.updatedAt;
-
-  if (JSON.stringify(currentComparable) === JSON.stringify(nextComparable)) {
-    return true;
-  }
-
-  const nextContent = {
-    ...nextComparable,
-    updatedAt: new Date().toISOString(),
-  };
-
-  const body: Record<string, unknown> = {
-    message: "Update website content from admin",
-    content: encodeGitHubContent(JSON.stringify(nextContent, null, 2)),
-    branch: githubBranch,
-  };
-
-  if (sha) {
-    body.sha = sha;
-  }
-
-  const updateResponse = await fetch(url.replace(`?ref=${githubBranch}`, ""), {
-    method: "PUT",
-    headers,
-    body: JSON.stringify(body),
+export const patchSiteContent = async (patch: SiteContent) => {
+  const response = await fetch("/api/site-content", {
+    method: "PATCH",
+    headers: getAuthorizedHeaders(),
+    body: JSON.stringify(patch),
   });
 
-  if (!updateResponse.ok) {
-    const errorText = await updateResponse.text();
-    throw new Error(`GitHub khong luu duoc noi dung: ${errorText}`);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Khong the luu noi dung website.");
   }
 
-  return true;
-};
-
-export const patchSiteContent = async (patch: SiteContent) => {
-  await patchServerContent(patch);
-
-  try {
-    await publishContentToGitHub(patch);
-  } catch (error) {
-    console.warn("GitHub site content publish failed:", error);
-  }
+  return data;
 };

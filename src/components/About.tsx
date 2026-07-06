@@ -1,9 +1,8 @@
 import { Award, BookOpen, GraduationCap, Heart, Milestone, Users, Edit, Plus, Trash2, X, Upload, Sparkles, CheckCircle, AlertCircle, Loader2, Check, FileText, FileSpreadsheet } from "lucide-react";
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
-import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { getSharedGeminiApiKey } from "../geminiConfig";
-import { loadSiteContent, patchSiteContent } from "../siteContentSync";
+import { getAuthorizedHeaders, loadSiteContent, patchSiteContent } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
 
@@ -368,9 +367,7 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
     try {
       const response = await fetch("/api/generate-leader-descriptions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: getAuthorizedHeaders(),
         body: JSON.stringify({
           items: items.map(({ name, title }) => ({ name, title }))
         })
@@ -455,19 +452,16 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
     return results;
   };
 
-  const parseExcelData = (workbook: any): { name: string; title: string }[] => {
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
+  const parseDelimitedText = (text: string): { name: string; title: string }[] => {
+    const rows = text
+      .split(/\r?\n/)
+      .map((line) => line.split(/,|\t|;|\s+-\s+/).map((cell) => cell.trim()).filter(Boolean));
     const results: { name: string; title: string }[] = [];
 
     for (const row of rows) {
-      if (!row || !Array.isArray(row)) continue;
-      // Get non-empty cells
-      const cells = row.map(c => c !== null && c !== undefined ? String(c).trim() : "").filter(Boolean);
-      if (cells.length >= 2) {
-        const name = cells[0];
-        const title = cells[1];
+      if (row.length >= 2) {
+        const name = row[0];
+        const title = row[1];
 
         // Ignore header rows
         const nameLower = name.toLowerCase();
@@ -493,22 +487,20 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
 
     const fileName = file.name.toLowerCase();
     if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+      setImportError("Excel import is disabled for security. Please export the list as .csv/.txt or upload a .docx file.");
+      return;
+    } else if (fileName.endsWith(".csv") || fileName.endsWith(".txt")) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        try {
-          const data = new Uint8Array(event.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array" });
-          const results = parseExcelData(workbook);
-          if (results.length === 0) {
-            setImportError("Không tìm thấy danh sách giáo viên hợp lệ. Đảm bảo file Excel có ít nhất 2 cột (Cột 1 là Họ tên, Cột 2 là Chức vụ).");
-          } else {
-            setImportedList(results.map(r => ({ ...r, selected: true })));
-          }
-        } catch (err: any) {
-          setImportError("Lỗi đọc file Excel: " + err.message);
+        const text = String(event.target?.result || "");
+        const results = parseDelimitedText(text);
+        if (results.length === 0) {
+          setImportError("Khong tim thay danh sach giao vien hop le. Dinh dang yeu cau: Ho ten, Chuc vu.");
+        } else {
+          setImportedList(results.map(r => ({ ...r, selected: true })));
         }
       };
-      reader.readAsArrayBuffer(file);
+      reader.readAsText(file);
     } else if (fileName.endsWith(".docx")) {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -533,7 +525,7 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
       };
       reader.readAsArrayBuffer(file);
     } else {
-      setImportError("Định dạng file không được hỗ trợ. Vui lòng tải lên file Excel (.xlsx, .xls) hoặc Word (.docx).");
+      setImportError("Định dạng file không được hỗ trợ. Vui lòng tải lên file .docx, .csv hoặc .txt.");
     }
   };
 
@@ -751,7 +743,7 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
                 className="flex items-center space-x-1 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs hover:bg-indigo-700 active:scale-95 transition-all shadow-md shrink-0"
               >
                 <Upload className="h-3.5 w-3.5" />
-                <span>Nhập từ Word / Excel</span>
+                <span>Nhập từ Word / CSV</span>
               </button>
             </div>
           )}
@@ -1000,7 +992,7 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="font-sans text-base font-bold text-slate-900 flex items-center space-x-2">
                 <Upload className="h-4 w-4 text-emerald-600" />
-                <span>Nhập danh sách từ File Word / Excel</span>
+                <span>Nhập danh sách từ File Word / CSV</span>
               </h3>
               <button
                 onClick={() => setShowImportModal(false)}
@@ -1015,7 +1007,7 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
               <div className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-6 bg-slate-50/50 hover:bg-emerald-50/5 transition-colors relative flex flex-col items-center justify-center text-center">
                 <input
                   type="file"
-                  accept=".xlsx,.xls,.docx"
+                  accept=".docx,.csv,.txt"
                   onChange={handleFileUpload}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
@@ -1023,10 +1015,10 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
                   <Upload className="h-6 w-6" />
                 </div>
                 <p className="text-sm font-bold text-slate-700">
-                  {importFile ? importFile.name : "Kéo thả file Word/Excel hoặc nhấp vào đây"}
+                  {importFile ? importFile.name : "Kéo thả file Word/CSV/TXT hoặc nhấp vào đây"}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Chấp nhận các định dạng file .docx, .xlsx, .xls
+                  Chấp nhận các định dạng file .docx, .csv, .txt
                 </p>
               </div>
 
@@ -1036,7 +1028,7 @@ ${JSON.stringify(items.map(({ name, title }) => ({ name, title })))}`;
                   <span className="mr-1">💡</span> Hướng dẫn định dạng file chuẩn:
                 </p>
                 <ul className="list-disc pl-4 space-y-1 text-emerald-900/80">
-                  <li><strong>File Excel (.xlsx, .xls):</strong> Cột 1 ghi Họ và tên, Cột 2 ghi Chức vụ. (Dòng tiêu đề sẽ tự động được lọc bỏ).</li>
+                  <li><strong>File CSV/TXT:</strong> Cột 1 ghi Họ và tên, Cột 2 ghi Chức vụ. (Dòng tiêu đề sẽ tự động được lọc bỏ).</li>
                   <li><strong>File Word (.docx):</strong> Mỗi thầy cô viết trên 1 dòng có định dạng: <code className="bg-white/80 px-1 py-0.5 rounded border border-emerald-100/50">Họ tên - Chức vụ</code> (Ví dụ: Cô Nguyễn Thị Mai - Phó Hiệu trưởng).</li>
                   <li><strong>Tự viết mô tả AI:</strong> Hệ thống sử dụng mô hình trí tuệ nhân tạo Gemini để tự động biên soạn đoạn mô tả công tác chất lượng cao dựa trên tên và chức vụ đã nạp.</li>
                 </ul>

@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import crypto from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
@@ -11,7 +12,261 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.disable("x-powered-by");
+app.use(express.json({ limit: "1mb" }));
+
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  next();
+});
+
+type AdminSession = { csrfToken: string; expiresAt: number };
+
+const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
+const MAX_PATCH_KEYS = 30;
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const assistantAttempts = new Map<string, { count: number; resetAt: number }>();
+const adminSessions = new Map<string, AdminSession>();
+const allowedSiteContentKeys = new Set([
+  "schoolInfo",
+  "footerInfo",
+  "news",
+  "clubs",
+  "students",
+  "schedules",
+  "teachers",
+  "admissionRegistrations",
+  "admissionInstructions",
+  "realtimeQaMessages",
+  "addedLookupClasses",
+  "aboutMilestones",
+  "aboutLeaders",
+  "homeHighlightContent",
+  "updatedAt",
+]);
+
+let adminUsername = process.env.ADMIN_USERNAME || "";
+let adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || "";
+
+const safeEqual = (left: string, right: string) => {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer);
+};
+
+const hashPasswordSha256 = (password: string) =>
+  crypto.createHash("sha256").update(password).digest("hex");
+
+const createPasswordHash = (password: string) => {
+  const iterations = 210000;
+  const salt = crypto.randomBytes(16).toString("base64url");
+  const derived = crypto.pbkdf2Sync(password, salt, iterations, 32, "sha256").toString("base64url");
+  return `pbkdf2$${iterations}$${salt}$${derived}`;
+};
+
+const verifyPassword = (password: string, storedHash: string) => {
+  if (storedHash.startsWith("pbkdf2$")) {
+    const [, iterationsRaw, salt, expected] = storedHash.split("$");
+    const iterations = Number(iterationsRaw);
+    if (!iterations || !salt || !expected) {
+      return false;
+    }
+
+    const derived = crypto.pbkdf2Sync(password, salt, iterations, 32, "sha256").toString("base64url");
+    return safeEqual(derived, expected);
+  }
+
+  // Backward compatibility for existing ADMIN_PASSWORD_HASH=sha256(password).
+  return safeEqual(hashPasswordSha256(password), storedHash);
+};
+
+if (!adminPasswordHash && process.env.ADMIN_PASSWORD) {
+  adminPasswordHash = createPasswordHash(process.env.ADMIN_PASSWORD);
+}
+
+const isAdminConfigured = () => Boolean(adminUsername && adminPasswordHash);
+
+const checkLoginRateLimit = (key: string) => {
+  const now = Date.now();
+  const current = loginAttempts.get(key);
+  if (!current || current.resetAt <= now) {
+    loginAttempts.set(key, { count: 1, resetAt: now + 1000 * 60 * 15 });
+    return true;
+  }
+  current.count += 1;
+  return current.count <= 8;
+};
+
+const checkWindowRateLimit = (
+  store: Map<string, { count: number; resetAt: number }>,
+  key: string,
+  limit: number,
+  windowMs: number
+) => {
+  const now = Date.now();
+  const current = store.get(key);
+  if (!current || current.resetAt <= now) {
+    store.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+
+  current.count += 1;
+  return current.count <= limit;
+};
+
+const getBearerToken = (authorization = "") => {
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  return match?.[1] || "";
+};
+
+const parseCookies = (cookieHeader = "") => {
+  const cookies: Record<string, string> = {};
+  cookieHeader.split(";").forEach((pair) => {
+    const index = pair.indexOf("=");
+    if (index === -1) {
+      return;
+    }
+
+    const key = pair.slice(0, index).trim();
+    const value = pair.slice(index + 1).trim();
+    if (key) {
+      cookies[key] = decodeURIComponent(value);
+    }
+  });
+  return cookies;
+};
+
+const getAdminSessionToken = (req: express.Request) => {
+  const bearerToken = getBearerToken(req.headers.authorization);
+  if (bearerToken) {
+    return { token: bearerToken, source: "bearer" as const };
+  }
+
+  const cookies = parseCookies(req.headers.cookie);
+  return { token: cookies.lvt_admin_session || "", source: "cookie" as const };
+};
+
+const setAdminSessionCookie = (res: express.Response, token: string) => {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.setHeader(
+    "Set-Cookie",
+    `lvt_admin_session=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}${secure}`
+  );
+};
+
+const clearAdminSessionCookie = (res: express.Response) => {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.setHeader("Set-Cookie", `lvt_admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
+};
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+};
+
+const isAllowedOrigin = (req: express.Request) => {
+  const origin = req.headers.origin;
+  if (!origin) {
+    return true;
+  }
+
+  const host = req.headers.host;
+  const allowedOrigins = new Set([
+    host ? `http://${host}` : "",
+    host ? `https://${host}` : "",
+    process.env.APP_URL || "",
+  ].filter(Boolean));
+
+  return allowedOrigins.has(origin);
+};
+
+const requireSameOrigin: express.RequestHandler = (req, res, next) => {
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+    return next();
+  }
+
+  if (!isAllowedOrigin(req)) {
+    return res.status(403).json({ error: "Nguon yeu cau khong hop le." });
+  }
+
+  next();
+};
+
+const requireAdmin: express.RequestHandler = (req, res, next) => {
+  const { token, source } = getAdminSessionToken(req);
+  const session = token ? adminSessions.get(token) : null;
+
+  if (!session || session.expiresAt <= Date.now()) {
+    if (token) {
+      adminSessions.delete(token);
+    }
+    return res.status(401).json({ error: "Phien quan tri khong hop le hoac da het han." });
+  }
+
+  if (source === "cookie" && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+    const csrfToken = String(req.headers["x-csrf-token"] || "");
+    if (!csrfToken || !safeEqual(csrfToken, session.csrfToken)) {
+      return res.status(403).json({ error: "Ma xac thuc CSRF khong hop le." });
+    }
+  }
+
+  session.expiresAt = Date.now() + SESSION_TTL_MS;
+  next();
+};
+
+const validateSiteContentPatch: express.RequestHandler = (req, res, next) => {
+  if (!isPlainObject(req.body)) {
+    return res.status(400).json({ error: "Noi dung cap nhat khong hop le." });
+  }
+
+  const keys = Object.keys(req.body);
+  if (keys.length === 0 || keys.length > MAX_PATCH_KEYS) {
+    return res.status(400).json({ error: "So luong truong cap nhat khong hop le." });
+  }
+
+  const invalidKey = keys.find((key) => !allowedSiteContentKeys.has(key));
+  if (invalidKey) {
+    return res.status(400).json({ error: `Truong cap nhat khong duoc phep: ${invalidKey}` });
+  }
+
+  next();
+};
+
+const isTextMessage = (value: unknown): value is { role?: string; content: string } => {
+  return isPlainObject(value) && typeof value.content === "string";
+};
+
+const validateAssistantMessages = (messages: unknown) => {
+  if (!Array.isArray(messages) || messages.length === 0 || messages.length > 20) {
+    return false;
+  }
+
+  return messages.every((message) => {
+    return isTextMessage(message) && message.content.length > 0 && message.content.length <= 4000;
+  });
+};
+
+const validateLeaderItems = (items: unknown) => {
+  if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
+    return false;
+  }
+
+  return items.every((item) => {
+    return (
+      isPlainObject(item) &&
+      typeof item.name === "string" &&
+      typeof item.title === "string" &&
+      item.name.trim().length > 0 &&
+      item.name.length <= 120 &&
+      item.title.trim().length > 0 &&
+      item.title.length <= 160
+    );
+  });
+};
+
+app.use(requireSameOrigin);
 
 const contentFilePath = path.join(process.cwd(), "data", "site-content.json");
 
@@ -32,16 +287,102 @@ async function writeSiteContent(content: Record<string, unknown>) {
   await writeFile(contentFilePath, JSON.stringify(content, null, 2), "utf8");
 }
 
-app.get("/api/site-content", async (_req, res) => {
+const getReadableSiteContent = async (req: express.Request) => {
+  const content = await readSiteContent();
+  const { token } = getAdminSessionToken(req);
+  const session = token ? adminSessions.get(token) : null;
+
+  if (session && session.expiresAt > Date.now()) {
+    session.expiresAt = Date.now() + SESSION_TTL_MS;
+    return content;
+  }
+
+  const publicContent = { ...content };
+  delete publicContent.admissionRegistrations;
+  return publicContent;
+};
+
+app.get("/api/site-content", async (req, res) => {
   try {
-    return res.json(await readSiteContent());
+    return res.json(await getReadableSiteContent(req));
   } catch (error: any) {
     console.error("Read Site Content Error:", error);
     return res.status(500).json({ error: "Khong the doc noi dung website." });
   }
 });
 
-app.patch("/api/site-content", async (req, res) => {
+app.post("/api/admin/login", async (req, res) => {
+  try {
+    if (!isAdminConfigured()) {
+      return res.status(503).json({
+        error: "Chua cau hinh ADMIN_USERNAME va ADMIN_PASSWORD tren may chu.",
+      });
+    }
+
+    const remoteKey = req.ip || "unknown";
+    if (!checkLoginRateLimit(remoteKey)) {
+      return res.status(429).json({ error: "Dang nhap sai qua nhieu lan. Vui long thu lai sau." });
+    }
+
+    const { username, password } = req.body || {};
+    const isValid =
+      safeEqual(String(username || ""), adminUsername) &&
+      verifyPassword(String(password || ""), adminPasswordHash);
+
+    if (!isValid) {
+      return res.status(401).json({ error: "Ten dang nhap hoac mat khau quan tri khong chinh xac." });
+    }
+
+    const token = crypto.randomBytes(32).toString("base64url");
+    const csrfToken = crypto.randomBytes(32).toString("base64url");
+    adminSessions.set(token, { csrfToken, expiresAt: Date.now() + SESSION_TTL_MS });
+    setAdminSessionCookie(res, token);
+    return res.json({ success: true, csrfToken, expiresInSeconds: SESSION_TTL_MS / 1000 });
+  } catch (error: any) {
+    console.error("Admin Login Error:", error);
+    return res.status(500).json({ error: "Khong the dang nhap quan tri." });
+  }
+});
+
+app.post("/api/admin/change-credentials", requireAdmin, async (req, res) => {
+  try {
+    const { currentUsername, currentPassword, newUsername, newPassword } = req.body || {};
+    const isCurrentValid =
+      safeEqual(String(currentUsername || ""), adminUsername) &&
+      verifyPassword(String(currentPassword || ""), adminPasswordHash);
+
+    if (!isCurrentValid) {
+      return res.status(401).json({ error: "Thong tin quan tri hien tai khong chinh xac." });
+    }
+
+    if (!String(newUsername || "").trim() || String(newPassword || "").length < 10) {
+      return res.status(400).json({ error: "Ten dang nhap moi khong duoc trong va mat khau can it nhat 10 ky tu." });
+    }
+
+    adminUsername = String(newUsername).trim();
+    adminPasswordHash = createPasswordHash(String(newPassword));
+    adminSessions.clear();
+
+    return res.json({
+      success: true,
+      message: "Da doi thong tin quan tri cho phien may chu hien tai. Hay cap nhat bien moi truong de luu ben vung.",
+    });
+  } catch (error: any) {
+    console.error("Change Credentials Error:", error);
+    return res.status(500).json({ error: "Khong the doi thong tin quan tri." });
+  }
+});
+
+app.post("/api/admin/logout", requireAdmin, async (req, res) => {
+  const { token } = getAdminSessionToken(req);
+  if (token) {
+    adminSessions.delete(token);
+  }
+  clearAdminSessionCookie(res);
+  return res.json({ success: true });
+});
+
+app.patch("/api/site-content", requireAdmin, validateSiteContentPatch, async (req, res) => {
   try {
     const current = await readSiteContent();
     const next = { ...current, ...req.body };
@@ -87,7 +428,11 @@ app.post("/api/assistant", async (req, res) => {
   try {
     const { messages } = req.body;
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!checkWindowRateLimit(assistantAttempts, req.ip || "unknown", 60, 1000 * 60 * 15)) {
+      return res.status(429).json({ error: "Ban dang gui qua nhieu yeu cau AI. Vui long thu lai sau." });
+    }
+
+    if (!validateAssistantMessages(messages)) {
       return res.status(400).json({ error: "Tham số messages không hợp lệ." });
     }
 
@@ -142,11 +487,11 @@ app.post("/api/assistant", async (req, res) => {
 });
 
 // API endpoint to auto-generate descriptions for leaders/teachers based on name and title using Gemini AI
-app.post("/api/generate-leader-descriptions", async (req, res) => {
+app.post("/api/generate-leader-descriptions", requireAdmin, async (req, res) => {
   try {
     const { items } = req.body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    if (!validateLeaderItems(items)) {
       return res.status(400).json({ error: "Danh sách giáo viên không hợp lệ." });
     }
 
@@ -203,10 +548,10 @@ Hãy điền thêm trường "desc" vào từng đối tượng và trả về d
   }
 });
 
-// API endpoint for forgot password
+// API endpoint for password recovery guidance. It never returns or sends raw passwords.
 app.post("/api/forgot-password", async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email } = req.body || {};
 
     if (!email) {
       return res.status(400).json({ error: "Email không được để trống." });
@@ -219,12 +564,8 @@ app.post("/api/forgot-password", async (req, res) => {
 
     // Check if SMTP is configured
     if (!smtpUser || !smtpPass || !smtpHost) {
-      console.log("SMTP not configured. Responding with mock/fallback mode.");
-      return res.json({
-        success: true,
-        smtpConfigured: false,
-        message: "SMTP chưa được cấu hình. Đang chạy ở chế độ mô phỏng / dự phòng.",
-        credentials: { username, password }
+      return res.status(503).json({
+        error: "SMTP chua duoc cau hinh. Vui long lien he nguoi quan tri may chu de dat lai mat khau.",
       });
     }
 
@@ -255,11 +596,9 @@ app.post("/api/forgot-password", async (req, res) => {
             Hệ thống nhận được yêu cầu khôi phục thông tin tài khoản đăng nhập quản trị viên của bạn tại trang thông tin Trường Tiểu học Lê Văn Tám.
           </p>
           <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
-            <p style="margin: 0 0 8px 0; font-size: 14px; color: #334155;"><strong>Thông tin tài khoản hiện tại:</strong></p>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155;">
-              <li style="margin-bottom: 5px;">Tên đăng nhập: <strong style="color: #0f172a;">${username}</strong></li>
-              <li>Mật khẩu: <strong style="color: #0f172a;">${password}</strong></li>
-            </ul>
+            <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.6;">
+              Vì lý do bảo mật, website không gửi mật khẩu hiện tại qua email. Vui lòng cập nhật lại biến môi trường <strong>ADMIN_PASSWORD</strong> hoặc <strong>ADMIN_PASSWORD_HASH</strong> trên máy chủ/deployment, sau đó khởi động lại ứng dụng.
+            </p>
           </div>
           <p style="font-size: 13px; color: #ef4444; font-style: italic; line-height: 1.5; margin-top: 20px;">
             * Lưu ý bảo mật: Vui lòng không chia sẻ email này cho bất kỳ ai. Bạn có thể đổi mật khẩu bất kỳ lúc nào tại Bảng điều khiển Quản trị viên.
