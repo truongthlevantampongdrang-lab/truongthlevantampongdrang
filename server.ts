@@ -435,6 +435,8 @@ app.get("/api/site-content", async (req, res) => {
 
 app.post("/api/admin/login", async (req, res) => {
   try {
+    await refreshAdminCredentialsFromEnv();
+
     if (!isAdminConfigured()) {
       return res.status(503).json({
         error: "Chua cau hinh ADMIN_USERNAME va ADMIN_PASSWORD tren may chu.",
