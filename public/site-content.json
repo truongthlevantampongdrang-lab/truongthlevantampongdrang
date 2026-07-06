@@ -65,12 +65,7 @@
     }
   ],
   "teachers": [
-    "Cô Nguyễn Thị Hà",
-    "Cô H'Nghia Niê",
-    "Thầy Lê Anh Tuấn",
-    "Cô Lê Thị Mai",
-    "Thầy Nguyễn Văn Hùng",
-    "Cô Trịnh Thị Oanh"
+    "Thầy Uông Đông Anh"
   ],
   "admissionInstructions": "Độ tuổi quy định: Trẻ 6 tuổi (sinh năm 2020) cư trú hợp pháp tại xã Pơng Drang, huyện Krông Búk.\nCác bước thực hiện:\nĐiền đầy đủ thông tin vào mẫu đăng ký tuyển sinh trực tuyến.\nLưu lại mã hồ sơ tuyển sinh được cấp sau khi gửi đăng ký.\nSử dụng số điện thoại cha mẹ để theo dõi tiến độ phê duyệt trực tuyến.\nKhi hồ sơ được chấp nhận: Nhà trường sẽ gửi tin nhắn/gọi điện mời cha mẹ mang bản sao khai sinh và mã số định danh tới văn phòng trường để đối chiếu chính thức.",
   "realtimeQaMessages": [
@@ -80,7 +75,9 @@
       "time": "14:18"
     }
   ],
-  "addedLookupClasses": [],
+  "addedLookupClasses": [
+    "5A"
+  ],
   "schoolInfo": {
     "name": "Trường Tiểu học Lê Văn Tám",
     "subTitle": "Sở Giáo dục và Đào tạo Tỉnh Đắk Lắk",

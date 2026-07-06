@@ -59,7 +59,7 @@ export default function Header({ activeTab, setActiveTab, isAdminMode, setIsAdmi
                         : "text-emerald-900/70 hover:bg-emerald-50/50 hover:text-emerald-950"
                     }`}
                   >
-                    {item.icon && <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />}
+                    {item.icon && <Sparkles className="h-4 w-4 text-amber-500" />}
                     <span>{item.label}</span>
                     {isActive && (
                       <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-emerald-600 rounded-full" />

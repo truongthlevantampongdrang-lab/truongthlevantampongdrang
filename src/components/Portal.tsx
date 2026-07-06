@@ -382,7 +382,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     };
 
     syncRealtimeQaMessages();
-    const syncTimer = window.setInterval(syncRealtimeQaMessages, 2500);
+    const syncTimer = window.setInterval(syncRealtimeQaMessages, 10000);
 
     return () => {
       isMounted = false;

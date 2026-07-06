@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode, useState, useEffect, useLayoutEffect, useRef, FormEvent } from "react";
+import { Component, ErrorInfo, ReactNode, useState, useEffect, useRef, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
@@ -209,7 +209,7 @@ export default function App() {
     };
   }, []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const removeLegacyHighlightButtons = () => {
       document.querySelectorAll("button").forEach((button) => {
         const title = button.getAttribute("title") || "";
@@ -224,12 +224,8 @@ export default function App() {
       });
     };
 
-    removeLegacyHighlightButtons();
-    const observer = new MutationObserver(removeLegacyHighlightButtons);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => observer.disconnect();
-  }, []);
+    window.setTimeout(removeLegacyHighlightButtons, 0);
+  }, [activeTab]);
 
   useEffect(() => {
     const page = getSeoPage(activeTab);
@@ -687,7 +683,7 @@ export default function App() {
         {isAdminMode && (
           <div data-admin-bar className="bg-amber-500 text-emerald-950 py-2 px-4 text-center text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner border-b border-amber-600/30">
             <div className="flex items-center space-x-2">
-              <Shield className="h-4 w-4 text-emerald-950 animate-bounce" />
+              <Shield className="h-4 w-4 text-emerald-950" />
               <span>ĐANG Ở CHẾ ĐỘ QUẢN TRỊ VIÊN. Bạn có thể tự do chỉnh sửa trực tiếp mọi nội dung, tin tức, học sinh, CLB và thời khóa biểu!</span>
             </div>
             <div data-admin-actions className="flex items-center space-x-2 shrink-0 sm:ml-4">
@@ -860,7 +856,7 @@ export default function App() {
               {/* GEMINI KEY CONFIG */}
               <div className="rounded-2xl bg-emerald-50/40 p-3 border border-emerald-100/50 space-y-2 mt-2">
                 <h4 className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1">
-                  <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" />
+                  <Sparkles className="h-3 w-3 text-amber-500" />
                   <span>Cấu hình Trợ lý AI (Gemini Key)</span>
                 </h4>
                 <p className="text-[10px] text-slate-500 leading-normal">
