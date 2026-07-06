@@ -1,4 +1,5 @@
 import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo } from "react";
+import { readSheet } from "read-excel-file/browser";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
@@ -47,6 +48,7 @@ const getQaMessageKey = (message: RealtimeQaMessage, index: number) =>
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024;
 const MAX_IMPORT_ROWS = 1000;
 const MAX_IMPORT_TEXT_LENGTH = 250000;
+const EXCEL_EXTENSIONS = [".xlsx"];
 
 const escapeCsvCell = (value: unknown) => {
   const text = String(value ?? "");
@@ -68,6 +70,28 @@ const downloadCsv = (rows: Record<string, unknown>[], filename: string) => {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+};
+
+const isExcelFileName = (name: string) => {
+  const lowerName = name.toLowerCase();
+  return EXCEL_EXTENSIONS.some((extension) => lowerName.endsWith(extension));
+};
+
+const normalizeExcelCell = (value: unknown) => {
+  if (value instanceof Date) {
+    return value.toLocaleDateString("vi-VN");
+  }
+
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+};
+
+const excelFileToText = async (file: File) => {
+  const rows = await readSheet(file);
+  return rows
+    .slice(0, MAX_IMPORT_ROWS)
+    .map((row) => row.map(normalizeExcelCell).filter(Boolean).join(" "))
+    .filter(Boolean)
+    .join("\n");
 };
 
 export default function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
@@ -580,28 +604,34 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     const file = e.target.files?.[0];
     if (!file) return;
     setImportError("");
+    setImportSuccess("");
 
     if (file.size > MAX_IMPORT_FILE_SIZE) {
-      setImportError("File quá lớn. Vui lòng tải file tối đa 1MB để đảm bảo an toàn.");
+      setImportError("File Excel quá lớn. Vui lòng tải file tối đa 1MB để đảm bảo an toàn.");
       e.target.value = "";
       return;
     }
 
-    if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
-      setImportError("Excel import is disabled for security. Please export the sheet as .csv or .txt and upload it again.");
+    if (!isExcelFileName(file.name)) {
+      setImportError("Chỉ hỗ trợ tải file Excel định dạng .xlsx.");
       e.target.value = "";
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) {
+    excelFileToText(file)
+      .then((text) => {
+        if (!text) {
+          setImportError("Không đọc được dữ liệu trong file Excel. Vui lòng kiểm tra sheet đầu tiên.");
+          return;
+        }
+
         setVnEduInputText(text);
         handleParseVnEdu(text);
-      }
-    };
-    reader.readAsText(file);
+      })
+      .catch((error: any) => {
+        setImportError(`Không thể đọc file Excel: ${error.message || "File không hợp lệ."}`);
+      });
+    e.target.value = "";
   };
 
   const handleParseVnEdu = (textToParse: string) => {
@@ -614,7 +644,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     }
 
     if (!textToParse.trim()) {
-      setImportError("Vui lòng dán văn bản bảng điểm hoặc tải file .csv/.txt lên.");
+      setImportError("Vui lòng tải file Excel .xlsx từ vnEdu.");
       return;
     }
 
@@ -2893,10 +2923,10 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
               <div className="bg-emerald-50/40 border border-emerald-100/50 p-4 rounded-2xl text-xs space-y-2 text-emerald-950">
                 <div className="font-bold flex items-center space-x-1">
                   <HelpCircle className="h-4 w-4 text-emerald-700" />
-                  <span>Hướng dẫn định dạng văn bản vnEdu:</span>
+                  <span>Hướng dẫn định dạng file Excel vnEdu:</span>
                 </div>
                 <p className="leading-relaxed">
-                  Hệ thống hỗ trợ tải file văn bản hoặc dán trực tiếp bảng điểm kết xuất từ <strong>vnEdu</strong>. Mỗi học sinh nằm trên một dòng riêng biệt, chứa <strong>Họ tên</strong>, <strong>Ngày sinh (DD/MM/YYYY)</strong> và <strong>Dãy điểm số định kỳ</strong>.
+                  Hệ thống chỉ hỗ trợ tải file <strong>Excel .xlsx</strong> kết xuất từ <strong>vnEdu</strong>. Sheet đầu tiên cần có dữ liệu học sinh, gồm <strong>Họ tên</strong>, <strong>Ngày sinh (DD/MM/YYYY)</strong> và <strong>Dãy điểm số định kỳ</strong>.
                 </p>
                 <div className="bg-white/80 p-2.5 rounded-xl font-mono text-[10px] text-emerald-900 border border-emerald-100 mt-1">
                   Ví dụ dòng mẫu:<br />
@@ -2931,39 +2961,33 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                 {/* Upload File Section */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Chọn File từ máy tính (.txt, .csv):
+                    Chọn File Excel từ máy tính (.xlsx):
                   </label>
                   <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-xl p-3 text-center transition-all cursor-pointer">
                     <input
                       type="file"
-                      accept=".txt,.csv"
+                      accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                       onChange={handleVnEduFileUpload}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                     <div className="flex items-center justify-center space-x-1.5 text-xs text-slate-500">
                       <Upload className="h-4 w-4 text-slate-400" />
-                      <span className="font-semibold">Tải lên hoặc kéo thả file</span>
+                      <span className="font-semibold">Tải lên hoặc kéo thả file Excel</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Raw Text Input */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Hoặc dán văn bản bảng điểm trực tiếp:
-                </label>
-                <textarea
-                  value={vnEduInputText}
-                  onChange={(e) => {
-                    setVnEduInputText(e.target.value);
-                    handleParseVnEdu(e.target.value);
-                  }}
-                  placeholder="Dán nội dung sao chép từ vnEdu vào đây..."
-                  rows={4}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 p-3 text-xs font-mono text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
-                ></textarea>
-              </div>
+              {vnEduInputText && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Nội dung Excel đã đọc
+                  </div>
+                  <pre className="max-h-28 overflow-y-auto whitespace-pre-wrap text-[11px] leading-relaxed text-slate-600">
+                    {vnEduInputText}
+                  </pre>
+                </div>
+              )}
 
               {/* Parse Results Preview List */}
               {parsedStudents.length > 0 && (

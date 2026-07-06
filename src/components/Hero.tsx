@@ -102,6 +102,20 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
   };
 
   const [hasLoadedHighlightContent, setHasLoadedHighlightContent] = useState(false);
+  const [showEditHighlightModal, setShowEditHighlightModal] = useState(false);
+  const [editingHighlightIndex, setEditingHighlightIndex] = useState<number | null>(null);
+  const [highlightForm, setHighlightForm] = useState<HighlightItem>({
+    title: "",
+    description: "",
+    image: "",
+    tag: "",
+  });
+  const [showEditCtaModal, setShowEditCtaModal] = useState(false);
+  const [ctaForm, setCtaForm] = useState({
+    ctaTitle: "",
+    ctaDescription: "",
+    ctaButtonText: "",
+  });
   const [highlightContent, setHighlightContent] = useState<HighlightContent>(() => {
     const saved = localStorage.getItem("lvt_home_highlight_content");
     if (saved) {
@@ -164,6 +178,41 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     e.preventDefault();
     updateSchoolInfo(schoolForm);
     setShowEditPrincipalModal(false);
+  };
+
+  const openEditHighlightModal = (index: number) => {
+    setEditingHighlightIndex(index);
+    setHighlightForm({ ...highlightContent.items[index] });
+    setShowEditHighlightModal(true);
+  };
+
+  const handleSaveHighlight = (e: FormEvent) => {
+    e.preventDefault();
+    if (editingHighlightIndex === null) return;
+
+    const nextItems = [...highlightContent.items];
+    nextItems[editingHighlightIndex] = highlightForm;
+    setHighlightContent({ ...highlightContent, items: nextItems });
+    setShowEditHighlightModal(false);
+    setEditingHighlightIndex(null);
+  };
+
+  const openEditCtaModal = () => {
+    setCtaForm({
+      ctaTitle: highlightContent.ctaTitle,
+      ctaDescription: highlightContent.ctaDescription,
+      ctaButtonText: highlightContent.ctaButtonText,
+    });
+    setShowEditCtaModal(true);
+  };
+
+  const handleSaveCta = (e: FormEvent) => {
+    e.preventDefault();
+    setHighlightContent({
+      ...highlightContent,
+      ...ctaForm,
+    });
+    setShowEditCtaModal(false);
   };
 
 
@@ -353,6 +402,16 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
               key={i}
               className="relative flex flex-col overflow-hidden rounded-2xl bg-white border border-emerald-50 hover:border-emerald-100 shadow-sm hover:shadow-lg transition-all duration-300"
             >
+              {isAdminMode && (
+                <button
+                  type="button"
+                  onClick={() => openEditHighlightModal(i)}
+                  className="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-[11px] font-bold text-emerald-950 shadow-md transition-colors hover:bg-amber-400"
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                  <span>Sửa</span>
+                </button>
+              )}
               <div className="relative h-48 overflow-hidden bg-emerald-150">
                 <img
                   src={h.image}
@@ -376,6 +435,16 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
       {/* Creative local resources banner */}
       <section className="rounded-3xl bg-amber-500 text-emerald-950 p-8 sm:p-10 shadow-lg relative overflow-hidden">
+        {isAdminMode && (
+          <button
+            type="button"
+            onClick={openEditCtaModal}
+            className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-lg bg-emerald-950 px-3 py-1.5 text-[11px] font-bold text-amber-300 shadow-md transition-colors hover:bg-emerald-900"
+          >
+            <Edit className="h-3.5 w-3.5" />
+            <span>Sửa khối này</span>
+          </button>
+        )}
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 h-64 w-64 rounded-full bg-white/10 blur-2xl"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="space-y-3 max-w-xl">
@@ -393,6 +462,170 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
         </div>
       </section>
 
+
+      {/* Modal Edit Highlight Card */}
+      {showEditHighlightModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-emerald-950/40 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white p-6 shadow-2xl border border-emerald-50 animate-in zoom-in-95 duration-250">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <h3 className="font-sans text-base font-bold text-slate-900">
+                Chỉnh sửa thẻ điểm nhấn
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowEditHighlightModal(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveHighlight} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nhãn nhỏ
+                </label>
+                <input
+                  type="text"
+                  value={highlightForm.tag}
+                  onChange={(e) => setHighlightForm({ ...highlightForm, tag: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Tiêu đề thẻ
+                </label>
+                <input
+                  type="text"
+                  value={highlightForm.title}
+                  onChange={(e) => setHighlightForm({ ...highlightForm, title: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  value={highlightForm.description}
+                  onChange={(e) => setHighlightForm({ ...highlightForm, description: e.target.value })}
+                  rows={4}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  required
+                />
+              </div>
+
+              <ImageUploadField
+                label="Ảnh của thẻ"
+                value={highlightForm.image}
+                fallback={sampleImages.highlight1}
+                aspect="wide"
+                outputWidth={700}
+                outputHeight={420}
+                onChange={(image) => setHighlightForm({ ...highlightForm, image })}
+              />
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditHighlightModal(false)}
+                  className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2 text-sm font-bold text-white transition-all shadow-md"
+                >
+                  Lưu thẻ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit CTA Banner */}
+      {showEditCtaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-emerald-950/40 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white p-6 shadow-2xl border border-emerald-50 animate-in zoom-in-95 duration-250">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <h3 className="font-sans text-base font-bold text-slate-900">
+                Chỉnh sửa khối kêu gọi hành động
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowEditCtaModal(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCta} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Tiêu đề
+                </label>
+                <input
+                  type="text"
+                  value={ctaForm.ctaTitle}
+                  onChange={(e) => setCtaForm({ ...ctaForm, ctaTitle: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  value={ctaForm.ctaDescription}
+                  onChange={(e) => setCtaForm({ ...ctaForm, ctaDescription: e.target.value })}
+                  rows={5}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Chữ trên nút
+                </label>
+                <input
+                  type="text"
+                  value={ctaForm.ctaButtonText}
+                  onChange={(e) => setCtaForm({ ...ctaForm, ctaButtonText: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditCtaModal(false)}
+                  className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2 text-sm font-bold text-white transition-all shadow-md"
+                >
+                  Lưu khối
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal Edit School Info */}
       {showEditSchoolModal && (
