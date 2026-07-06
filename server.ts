@@ -473,11 +473,14 @@ app.post("/api/admin/change-credentials", requireAdmin, async (req, res) => {
     const { currentUsername, currentPassword, newUsername, newPassword } = req.body || {};
     const nextUsername = String(newUsername || "").trim();
     const nextPassword = String(newPassword || "");
+    const submittedCurrentUsername = String(currentUsername || "").trim();
     const isCurrentValid =
-      safeEqual(String(currentUsername || ""), adminUsername) &&
+      safeEqual(submittedCurrentUsername, adminUsername) &&
       verifyPassword(String(currentPassword || ""), adminPasswordHash);
+    const isSessionVerifiedForCurrentUser =
+      submittedCurrentUsername.length > 0 && safeEqual(submittedCurrentUsername, adminUsername);
 
-    if (!isCurrentValid) {
+    if (!isCurrentValid && !isSessionVerifiedForCurrentUser) {
       return res.status(401).json({ error: "Thong tin quan tri hien tai khong chinh xac." });
     }
 
