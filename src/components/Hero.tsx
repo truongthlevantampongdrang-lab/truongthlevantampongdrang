@@ -1,5 +1,5 @@
 import { GraduationCap, Users, Award, BookOpen, ChevronRight, Sparkles, Star, Edit, X } from "lucide-react";
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import { loadSiteContent, patchSiteContent } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
@@ -41,6 +41,7 @@ interface HeroProps {
 }
 
 export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchoolInfo }: HeroProps) {
+  const highlightSaveTimerRef = useRef<number | null>(null);
   const [showEditSchoolModal, setShowEditSchoolModal] = useState(false);
   const [showEditPrincipalModal, setShowEditPrincipalModal] = useState(false);
   const [showEditStatsModal, setShowEditStatsModal] = useState(false);
@@ -139,9 +140,16 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
     localStorage.setItem("lvt_home_highlight_content", JSON.stringify(highlightContent));
     if (!hasLoadedHighlightContent) return;
 
-    patchSiteContent({ homeHighlightContent: highlightContent }).catch((error) => {
-      console.warn("Home highlight content sync failed:", error);
-    });
+    if (highlightSaveTimerRef.current) {
+      window.clearTimeout(highlightSaveTimerRef.current);
+    }
+
+    highlightSaveTimerRef.current = window.setTimeout(() => {
+      highlightSaveTimerRef.current = null;
+      patchSiteContent({ homeHighlightContent: highlightContent }).catch((error) => {
+        console.warn("Home highlight content sync failed:", error);
+      });
+    }, 900);
   }, [highlightContent, hasLoadedHighlightContent]);
 
   const highlights = highlightContent.items;

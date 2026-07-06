@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode, useState, useEffect, useLayoutEffect, FormEvent } from "react";
+import { Component, ErrorInfo, ReactNode, useState, useEffect, useLayoutEffect, useRef, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
@@ -134,6 +134,8 @@ function getInitialTab() {
 
 export default function App() {
   syncContentCacheVersion();
+  const pendingSiteContentRef = useRef<Record<string, unknown>>({});
+  const saveSiteContentTimerRef = useRef<number | null>(null);
 
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
@@ -412,10 +414,33 @@ export default function App() {
   const saveSiteContent = (content: Record<string, unknown>) => {
     if (!hasLoadedSiteContent) return;
 
-    patchSiteContent(content).catch((error) => {
-      console.warn("Site content sync failed:", error);
-    });
+    pendingSiteContentRef.current = {
+      ...pendingSiteContentRef.current,
+      ...content,
+    };
+
+    if (saveSiteContentTimerRef.current) {
+      window.clearTimeout(saveSiteContentTimerRef.current);
+    }
+
+    saveSiteContentTimerRef.current = window.setTimeout(() => {
+      const patch = pendingSiteContentRef.current;
+      pendingSiteContentRef.current = {};
+      saveSiteContentTimerRef.current = null;
+
+      patchSiteContent(patch).catch((error) => {
+        console.warn("Site content sync failed:", error);
+      });
+    }, 900);
   };
+
+  useEffect(() => {
+    return () => {
+      if (saveSiteContentTimerRef.current) {
+        window.clearTimeout(saveSiteContentTimerRef.current);
+      }
+    };
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -684,20 +709,11 @@ export default function App() {
 
         {/* Main Content Stage container */}
         <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div>
-            {SEO_PAGES.map((page) => (
-              <section
-                key={page.tab}
-                hidden={activeTab !== page.tab}
-                aria-hidden={activeTab !== page.tab}
-                className={activeTab === page.tab ? "block" : "hidden"}
-              >
-                <TabErrorBoundary>
-                  {renderContent(page.tab)}
-                </TabErrorBoundary>
-              </section>
-            ))}
-          </div>
+          <section key={activeTab}>
+            <TabErrorBoundary>
+              {renderContent(activeTab)}
+            </TabErrorBoundary>
+          </section>
         </main>
       </div>
 

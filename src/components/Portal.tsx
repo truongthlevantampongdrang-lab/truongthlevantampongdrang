@@ -71,6 +71,8 @@ const downloadCsv = (rows: Record<string, unknown>[], filename: string) => {
 };
 
 export default function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
+  const pendingSiteContentRef = useRef<Record<string, unknown>>({});
+  const saveSiteContentTimerRef = useRef<number | null>(null);
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"grades" | "schedule" | "clubs" | "teachers">("grades");
 
@@ -411,9 +413,24 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   const saveSiteContent = (content: Record<string, unknown>) => {
     if (!hasLoadedSiteContent) return;
 
-    patchSiteContent(content).catch((error) => {
-      console.warn("Portal content sync failed:", error);
-    });
+    pendingSiteContentRef.current = {
+      ...pendingSiteContentRef.current,
+      ...content,
+    };
+
+    if (saveSiteContentTimerRef.current) {
+      window.clearTimeout(saveSiteContentTimerRef.current);
+    }
+
+    saveSiteContentTimerRef.current = window.setTimeout(() => {
+      const patch = pendingSiteContentRef.current;
+      pendingSiteContentRef.current = {};
+      saveSiteContentTimerRef.current = null;
+
+      patchSiteContent(patch).catch((error) => {
+        console.warn("Portal content sync failed:", error);
+      });
+    }, 900);
   };
 
   const [showAddLookupClassModal, setShowAddLookupClassModal] = useState(false);

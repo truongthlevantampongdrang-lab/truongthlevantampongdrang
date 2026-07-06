@@ -1,5 +1,5 @@
 import { Award, BookOpen, GraduationCap, Heart, Milestone, Users, Edit, Plus, Trash2, X, Upload, Sparkles, CheckCircle, AlertCircle, Loader2, Check, FileText, FileSpreadsheet } from "lucide-react";
-import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
 import mammoth from "mammoth";
 import { getSharedGeminiApiKey } from "../geminiConfig";
 import { getAuthorizedHeaders, loadSiteContent, patchSiteContent } from "../siteContentSync";
@@ -28,6 +28,8 @@ const GEMINI_TEXT_MODELS = [
 ];
 
 export default function About({ isAdminMode, schoolInfo }: AboutProps) {
+  const pendingSiteContentRef = useRef<Record<string, unknown>>({});
+  const saveSiteContentTimerRef = useRef<number | null>(null);
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
 
   // Load / Save Milestones locally
@@ -128,9 +130,24 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   const saveSiteContent = (content: Record<string, unknown>) => {
     if (!hasLoadedSiteContent) return;
 
-    patchSiteContent(content).catch((error) => {
-      console.warn("About content sync failed:", error);
-    });
+    pendingSiteContentRef.current = {
+      ...pendingSiteContentRef.current,
+      ...content,
+    };
+
+    if (saveSiteContentTimerRef.current) {
+      window.clearTimeout(saveSiteContentTimerRef.current);
+    }
+
+    saveSiteContentTimerRef.current = window.setTimeout(() => {
+      const patch = pendingSiteContentRef.current;
+      pendingSiteContentRef.current = {};
+      saveSiteContentTimerRef.current = null;
+
+      patchSiteContent(patch).catch((error) => {
+        console.warn("About content sync failed:", error);
+      });
+    }, 900);
   };
 
   useEffect(() => {
