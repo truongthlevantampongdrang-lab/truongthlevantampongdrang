@@ -18,6 +18,19 @@ const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}
   }
 };
 
+const waitForBrowserIdle = () =>
+  new Promise<void>((resolve) => {
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+    };
+
+    if (typeof idleWindow.requestIdleCallback === "function") {
+      idleWindow.requestIdleCallback(resolve, { timeout: 2000 });
+    } else {
+      window.setTimeout(resolve, 0);
+    }
+  });
+
 const getPublicContentUrl = () => {
   const baseUrl = (import.meta as any).env?.BASE_URL || "/";
   return `${baseUrl}site-content.json?v=${Date.now()}`;
@@ -183,6 +196,8 @@ export const patchSiteContent = async (patch: SiteContent) => {
   if (!getAdminSessionToken()) {
     return { success: false, skipped: true };
   }
+
+  await waitForBrowserIdle();
 
   const response = await fetchWithTimeout("/api/site-content", {
     method: "PATCH",

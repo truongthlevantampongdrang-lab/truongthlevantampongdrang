@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo, memo } from "react";
+import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo, useTransition, memo } from "react";
 import { readSheet } from "read-excel-file/browser";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
@@ -98,6 +98,7 @@ const excelFileToText = async (file: File) => {
 function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
   const pendingSiteContentRef = useRef<Record<string, unknown>>({});
   const saveSiteContentTimerRef = useRef<number | null>(null);
+  const [, startContentUpdateTransition] = useTransition();
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"grades" | "schedule" | "clubs" | "teachers">("grades");
   const [isScheduleEditingEnabled, setIsScheduleEditingEnabled] = useState(false);
@@ -1220,8 +1221,10 @@ function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, sch
       triggerAlert("Cảnh báo", "Nội dung hướng dẫn nộp hồ sơ không được để trống.", "warning");
       return;
     }
-    setAdmissionInstructions(clean);
     setIsEditingAdmissionInstructions(false);
+    startContentUpdateTransition(() => {
+      setAdmissionInstructions(clean);
+    });
     triggerAlert("Thành công", "Đã cập nhật hướng dẫn nộp hồ sơ.", "success");
   };
 

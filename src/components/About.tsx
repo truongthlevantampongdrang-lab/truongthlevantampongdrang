@@ -1,5 +1,5 @@
 import { Award, BookOpen, GraduationCap, Heart, Milestone, Users, Edit, Plus, Trash2, X, Upload, Sparkles, CheckCircle, AlertCircle, Loader2, Check, FileText, FileSpreadsheet } from "lucide-react";
-import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
+import { useState, useEffect, useRef, useTransition, FormEvent, ChangeEvent } from "react";
 import mammoth from "mammoth";
 import { getSharedGeminiApiKey } from "../geminiConfig";
 import { getAuthorizedHeaders, loadSiteContent, patchSiteContent, scheduleLocalStorageWrite } from "../siteContentSync";
@@ -30,6 +30,7 @@ const GEMINI_TEXT_MODELS = [
 export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   const pendingSiteContentRef = useRef<Record<string, unknown>>({});
   const saveSiteContentTimerRef = useRef<number | null>(null);
+  const [, startContentUpdateTransition] = useTransition();
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
 
   // Load / Save Milestones locally
@@ -220,6 +221,9 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
 
   const handleSaveMilestone = (e: FormEvent) => {
     e.preventDefault();
+    setShowMilestoneModal(false);
+
+    startContentUpdateTransition(() => {
     if (editingMilestoneIndex !== null) {
       const updated = [...milestones];
       updated[editingMilestoneIndex] = milestoneForm;
@@ -227,7 +231,7 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
     } else {
       setMilestones([...milestones, milestoneForm]);
     }
-    setShowMilestoneModal(false);
+    });
   };
 
   const handleDeleteMilestone = (index: number) => {
@@ -289,13 +293,15 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
     
     const finalizedForm = { ...leaderForm, avatar };
 
-    if (editingLeaderId) {
-      const updated = leaders.map((l: any) => (l.id === editingLeaderId ? finalizedForm : l));
-      setLeaders(updated);
-    } else {
-      setLeaders([...leaders, finalizedForm]);
-    }
     setShowLeaderModal(false);
+    startContentUpdateTransition(() => {
+      if (editingLeaderId) {
+        const updated = leaders.map((l: any) => (l.id === editingLeaderId ? finalizedForm : l));
+        setLeaders(updated);
+      } else {
+        setLeaders([...leaders, finalizedForm]);
+      }
+    });
   };
 
   const parseLeaderDescriptions = (rawText: string): LeaderDescriptionItem[] => {

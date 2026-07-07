@@ -147,6 +147,7 @@ export default function App() {
   });
   const [isPageEditingEnabled, setIsPageEditingEnabled] = useState(false);
   const [, startAdminModeTransition] = useTransition();
+  const [, startContentUpdateTransition] = useTransition();
   const contentAdminMode = deferredAdminMode && isPageEditingEnabled;
 
   // Load / Save Admin Credentials Modal States
@@ -500,12 +501,24 @@ export default function App() {
   }, [footerInfo]);
 
   // Handle updates from components
-  const updateSchoolInfo = useCallback((info: typeof schoolInfo) => setSchoolInfo(info), []);
-  const updateFooterInfo = useCallback((info: typeof footerInfo) => setFooterInfo(info), []);
-  const updateNews = useCallback((items: NewsItem[]) => setNews(items), []);
-  const updateClubs = useCallback((items: SchoolClub[]) => setClubs(items), []);
-  const updateStudents = useCallback((items: StudentScore[]) => setStudents(items), []);
-  const updateSchedules = useCallback((items: ClassSchedule[]) => setSchedules(items), []);
+  const updateSchoolInfo = useCallback((info: typeof schoolInfo) => {
+    startContentUpdateTransition(() => setSchoolInfo(info));
+  }, [startContentUpdateTransition]);
+  const updateFooterInfo = useCallback((info: typeof footerInfo) => {
+    startContentUpdateTransition(() => setFooterInfo(info));
+  }, [startContentUpdateTransition]);
+  const updateNews = useCallback((items: NewsItem[]) => {
+    startContentUpdateTransition(() => setNews(items));
+  }, [startContentUpdateTransition]);
+  const updateClubs = useCallback((items: SchoolClub[]) => {
+    startContentUpdateTransition(() => setClubs(items));
+  }, [startContentUpdateTransition]);
+  const updateStudents = useCallback((items: StudentScore[]) => {
+    startContentUpdateTransition(() => setStudents(items));
+  }, [startContentUpdateTransition]);
+  const updateSchedules = useCallback((items: ClassSchedule[]) => {
+    startContentUpdateTransition(() => setSchedules(items));
+  }, [startContentUpdateTransition]);
 
   const closeTransientAdminUi = useCallback(() => {
     setShowChangeCredsModal(false);
