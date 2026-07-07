@@ -145,7 +145,9 @@ export default function App() {
   const [deferredAdminMode, setDeferredAdminMode] = useState<boolean>(() => {
     return Boolean(getAdminSessionToken());
   });
+  const [isPageEditingEnabled, setIsPageEditingEnabled] = useState(false);
   const [, startAdminModeTransition] = useTransition();
+  const contentAdminMode = deferredAdminMode && isPageEditingEnabled;
 
   // Load / Save Admin Credentials Modal States
   const [showChangeCredsModal, setShowChangeCredsModal] = useState<boolean>(false);
@@ -517,6 +519,7 @@ export default function App() {
     const nextPath = getPagePath(page);
 
     closeTransientAdminUi();
+    setIsPageEditingEnabled(false);
     setActiveTab(page.tab);
     if (window.location.pathname !== nextPath) {
       window.history.pushState({ tab: page.tab }, "", nextPath);
@@ -570,6 +573,7 @@ export default function App() {
     localStorage.setItem("lvt_gemini_api_key", geminiApiKey.trim());
     clearAdminSession();
     setIsAdminMode(false);
+    setIsPageEditingEnabled(false);
 
     setCredsSuccess("Cấu hình tài khoản & Khoá API thành công!");
 
@@ -593,6 +597,7 @@ export default function App() {
     try {
       await loginAdmin(loginUsername, loginPassword);
       setIsAdminMode(true);
+      setIsPageEditingEnabled(false);
       setShowLoginModal(false);
       setLoginUsername("");
       setLoginPassword("");
@@ -643,12 +648,14 @@ export default function App() {
     alert("Để đặt lại tài khoản quản trị, hãy cập nhật ADMIN_USERNAME và ADMIN_PASSWORD trên máy chủ/deployment. Website không còn hỗ trợ mật khẩu mặc định.");
     logoutAdmin();
     setIsAdminMode(false);
+    setIsPageEditingEnabled(false);
     setShowAdminMenuModal(false);
   };
 
   const handleAdminLogout = () => {
     logoutAdmin();
     setIsAdminMode(false);
+    setIsPageEditingEnabled(false);
     setShowAdminMenuModal(false);
   };
 
@@ -658,7 +665,7 @@ export default function App() {
         return (
           <Hero
             onNavigate={navigateToTab}
-            isAdminMode={deferredAdminMode}
+            isAdminMode={contentAdminMode}
             schoolInfo={schoolInfo}
             updateSchoolInfo={updateSchoolInfo}
           />
@@ -666,14 +673,14 @@ export default function App() {
       case "about":
         return (
           <About
-            isAdminMode={deferredAdminMode}
+            isAdminMode={contentAdminMode}
             schoolInfo={schoolInfo}
           />
         );
       case "news":
         return (
           <News
-            isAdminMode={deferredAdminMode}
+            isAdminMode={contentAdminMode}
             newsList={news}
             updateNewsList={updateNews}
           />
@@ -681,7 +688,7 @@ export default function App() {
       case "portal":
         return (
           <Portal
-            isAdminMode={deferredAdminMode}
+            isAdminMode={contentAdminMode}
             clubs={clubs}
             updateClubs={updateClubs}
             students={students}
@@ -696,7 +703,7 @@ export default function App() {
         return (
           <Hero
             onNavigate={navigateToTab}
-            isAdminMode={deferredAdminMode}
+            isAdminMode={contentAdminMode}
             schoolInfo={schoolInfo}
             updateSchoolInfo={updateSchoolInfo}
           />
@@ -706,20 +713,40 @@ export default function App() {
 
   const renderedContent = useMemo(
     () => renderContent(activeTab),
-    [activeTab, deferredAdminMode, schoolInfo, news, clubs, students, schedules]
+    [activeTab, contentAdminMode, schoolInfo, news, clubs, students, schedules]
   );
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-emerald-100 selection:text-emerald-950">
       <div className="flex flex-col">
         {/* Admin Bar */}
-        {deferredAdminMode && (
+        {isAdminMode && (
           <div data-admin-bar className="bg-amber-500 text-emerald-950 py-2 px-4 text-center text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner border-b border-amber-600/30">
             <div className="flex items-center space-x-2">
               <Shield className="h-4 w-4 text-emerald-950" />
-              <span>ĐANG Ở CHẾ ĐỘ QUẢN TRỊ VIÊN. Bạn có thể tự do chỉnh sửa trực tiếp mọi nội dung, tin tức, học sinh, CLB và thời khóa biểu!</span>
+              <span>ĐANG Ở CHẾ ĐỘ QUẢN TRỊ VIÊN. Bấm "Bật Chỉnh Sửa Trang" khi cần hiện các công cụ sửa nội dung.</span>
             </div>
             <div data-admin-actions className="flex items-center space-x-2 shrink-0 sm:ml-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isPageEditingEnabled) {
+                    setIsPageEditingEnabled(false);
+                    return;
+                  }
+
+                  startAdminModeTransition(() => {
+                    setIsPageEditingEnabled(true);
+                  });
+                }}
+                className={`px-2 py-0.5 rounded border transition-colors text-[10px] font-bold ${
+                  isPageEditingEnabled
+                    ? "bg-white text-emerald-950 border-white hover:bg-amber-50"
+                    : "bg-emerald-950 text-amber-400 border-emerald-900 hover:bg-emerald-900"
+                }`}
+              >
+                {isPageEditingEnabled ? "Tắt Chỉnh Sửa Trang" : "Bật Chỉnh Sửa Trang"}
+              </button>
               <button
                 onClick={openChangeCredsModal}
                 className="px-2 py-0.5 bg-emerald-950 text-amber-400 border border-emerald-900 rounded hover:bg-emerald-900 transition-colors text-[10px] font-bold"
@@ -756,7 +783,7 @@ export default function App() {
 
       {/* Footer Identity bar */}
       <Footer
-        isAdminMode={deferredAdminMode}
+        isAdminMode={contentAdminMode}
         footerInfo={footerInfo}
         updateFooterInfo={updateFooterInfo}
       />

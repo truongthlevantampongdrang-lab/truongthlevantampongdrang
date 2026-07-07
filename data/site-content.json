@@ -200,60 +200,6 @@
   ],
   "students": [
     {
-      "id": "LVT-2026-01",
-      "name": "Nguyễn Minh Anh",
-      "className": "4A",
-      "birthDate": "12/04/2016",
-      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
-      "grades": {
-        "math": 9.5,
-        "vietnamese": 9,
-        "science": 10,
-        "english": 9.5,
-        "historyGeo": 9,
-        "informatics": 10
-      },
-      "conduct": "Tốt",
-      "comment": "Em Minh Anh học tập rất chăm chỉ, thông minh và gương mẫu. Tích cực phát biểu xây dựng bài và giúp đỡ các bạn trong lớp học.",
-      "rank": "Hoàn thành xuất sắc"
-    },
-    {
-      "id": "LVT-2026-02",
-      "name": "H'Riêk Niê",
-      "className": "4A",
-      "birthDate": "23/08/2016",
-      "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&fm=webp&q=75&w=200",
-      "grades": {
-        "math": 8.5,
-        "vietnamese": 9.5,
-        "science": 9,
-        "english": 9,
-        "historyGeo": 10,
-        "informatics": 9.5
-      },
-      "conduct": "Tốt",
-      "comment": "Em H'Riêk có năng khiếu đặc biệt môn Lịch sử & Địa lý và rất chăm chỉ. Đọc Tiếng Việt diễn cảm và có giọng hát rất hay trong CLB Đội chiêng.",
-      "rank": "Hoàn thành xuất sắc"
-    },
-    {
-      "id": "LVT-2026-03",
-      "name": "Trần Hoàng Nam",
-      "className": "4B",
-      "birthDate": "05/11/2016",
-      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&fm=webp&q=75&w=200",
-      "grades": {
-        "math": 8,
-        "vietnamese": 7.5,
-        "science": 8.5,
-        "english": 7,
-        "historyGeo": 8,
-        "informatics": 8.5
-      },
-      "conduct": "Tốt",
-      "comment": "Em Nam ngoan ngoãn, hăng hái tham gia hoạt động thể thao của trường. Cần rèn luyện thêm kỹ năng viết chính tả Tiếng Việt và tự tin nói Tiếng Anh hơn.",
-      "rank": "Hoàn thành tốt"
-    },
-    {
       "id": "LVT-2026-04",
       "name": "Y Blôk Êban",
       "className": "5C",
@@ -357,5 +303,5 @@
     "sloganAuthor": "Tập thể Thầy Cô giáo",
     "quickNote": "Học sinh tiêu biểu năm học: 100% đạt chuẩn phẩm chất và năng lực tiểu học."
   },
-  "updatedAt": "2026-07-07T02:00:51.170Z"
+  "updatedAt": "2026-07-07T02:23:56.362Z"
 }

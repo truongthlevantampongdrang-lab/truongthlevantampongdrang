@@ -364,7 +364,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   }, []);
 
   useEffect(() => {
-    if (!hasLoadedSiteContent || (!isQaOpen && !isAdminMode)) return;
+    if (!hasLoadedSiteContent || !isQaOpen) return;
 
     let isMounted = true;
     const syncRealtimeQaMessages = async () => {
