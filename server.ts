@@ -798,7 +798,15 @@ app.post("/api/forgot-password", async (req, res) => {
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        watch: {
+          ignored: [
+            "**/data/site-content.json",
+            "**/public/site-content.json",
+          ],
+        },
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
