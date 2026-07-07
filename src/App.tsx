@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode, useState, useEffect, useRef, FormEvent } from "react";
+import { Component, ErrorInfo, ReactNode, useState, useEffect, useRef, useMemo, useTransition, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
@@ -142,6 +142,10 @@ export default function App() {
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
     return Boolean(getAdminSessionToken());
   });
+  const [deferredAdminMode, setDeferredAdminMode] = useState<boolean>(() => {
+    return Boolean(getAdminSessionToken());
+  });
+  const [, startAdminModeTransition] = useTransition();
 
   // Load / Save Admin Credentials Modal States
   const [showChangeCredsModal, setShowChangeCredsModal] = useState<boolean>(false);
@@ -181,6 +185,29 @@ export default function App() {
   const [smtpConfigured, setSmtpConfigured] = useState<boolean>(false);
   const [recoveredCredentials, setRecoveredCredentials] = useState<{username: string, password: string}>({username: "", password: ""});
   const [forgotError, setForgotError] = useState<string>("");
+
+  useEffect(() => {
+    if (!isAdminMode) {
+      setDeferredAdminMode(false);
+      return;
+    }
+
+    let timerId: number | null = null;
+    const frameId = window.requestAnimationFrame(() => {
+      timerId = window.setTimeout(() => {
+        startAdminModeTransition(() => {
+          setDeferredAdminMode(true);
+        });
+      }, 120);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      if (timerId) {
+        window.clearTimeout(timerId);
+      }
+    };
+  }, [isAdminMode]);
 
   // Keydown combo listener for Ctrl + M + K
   useEffect(() => {
@@ -631,7 +658,7 @@ export default function App() {
         return (
           <Hero
             onNavigate={navigateToTab}
-            isAdminMode={isAdminMode}
+            isAdminMode={deferredAdminMode}
             schoolInfo={schoolInfo}
             updateSchoolInfo={updateSchoolInfo}
           />
@@ -639,14 +666,14 @@ export default function App() {
       case "about":
         return (
           <About
-            isAdminMode={isAdminMode}
+            isAdminMode={deferredAdminMode}
             schoolInfo={schoolInfo}
           />
         );
       case "news":
         return (
           <News
-            isAdminMode={isAdminMode}
+            isAdminMode={deferredAdminMode}
             newsList={news}
             updateNewsList={updateNews}
           />
@@ -654,7 +681,7 @@ export default function App() {
       case "portal":
         return (
           <Portal
-            isAdminMode={isAdminMode}
+            isAdminMode={deferredAdminMode}
             clubs={clubs}
             updateClubs={updateClubs}
             students={students}
@@ -669,7 +696,7 @@ export default function App() {
         return (
           <Hero
             onNavigate={navigateToTab}
-            isAdminMode={isAdminMode}
+            isAdminMode={deferredAdminMode}
             schoolInfo={schoolInfo}
             updateSchoolInfo={updateSchoolInfo}
           />
@@ -677,11 +704,16 @@ export default function App() {
     }
   };
 
+  const renderedContent = useMemo(
+    () => renderContent(activeTab),
+    [activeTab, deferredAdminMode, schoolInfo, news, clubs, students, schedules]
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-emerald-100 selection:text-emerald-950">
       <div className="flex flex-col">
         {/* Admin Bar */}
-        {isAdminMode && (
+        {deferredAdminMode && (
           <div data-admin-bar className="bg-amber-500 text-emerald-950 py-2 px-4 text-center text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner border-b border-amber-600/30">
             <div className="flex items-center space-x-2">
               <Shield className="h-4 w-4 text-emerald-950" />
@@ -716,7 +748,7 @@ export default function App() {
         <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <section key={activeTab}>
             <TabErrorBoundary>
-              {renderContent(activeTab)}
+              {renderedContent}
             </TabErrorBoundary>
           </section>
         </main>
@@ -724,7 +756,7 @@ export default function App() {
 
       {/* Footer Identity bar */}
       <Footer
-        isAdminMode={isAdminMode}
+        isAdminMode={deferredAdminMode}
         footerInfo={footerInfo}
         updateFooterInfo={updateFooterInfo}
       />

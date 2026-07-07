@@ -48,6 +48,7 @@ const getQaMessageKey = (message: RealtimeQaMessage, index: number) =>
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024;
 const MAX_IMPORT_ROWS = 1000;
 const MAX_IMPORT_TEXT_LENGTH = 250000;
+const MAX_VISIBLE_STUDENT_ROWS = 80;
 const EXCEL_EXTENSIONS = [".xlsx"];
 
 const escapeCsvCell = (value: unknown) => {
@@ -513,7 +514,15 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     });
   };
 
-  const lookupClasses = Array.from(new Set([
+  const studentCountByClass = useMemo(() => {
+    const counts = new Map<string, number>();
+    students.forEach((student) => {
+      counts.set(student.className, (counts.get(student.className) || 0) + 1);
+    });
+    return counts;
+  }, [students]);
+
+  const lookupClasses = useMemo(() => Array.from(new Set([
     "Tất cả",
     ...students.map(s => s.className),
     ...addedLookupClasses
@@ -521,7 +530,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     if (a === "Tất cả") return -1;
     if (b === "Tất cả") return 1;
     return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-  });
+  }), [students, addedLookupClasses]);
 
   const handleAddLookupClass = (e: FormEvent) => {
     e.preventDefault();
@@ -571,10 +580,17 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     );
   };
 
-  const filteredStudents = students.filter(s => {
+  const filteredStudents = useMemo(() => students.filter(s => {
     if (selectedLookupClass === "Tất cả") return true;
     return s.className === selectedLookupClass;
-  });
+  }), [students, selectedLookupClass]);
+
+  const visibleStudents = useMemo(
+    () => filteredStudents.slice(0, MAX_VISIBLE_STUDENT_ROWS),
+    [filteredStudents]
+  );
+
+  const hiddenStudentCount = Math.max(filteredStudents.length - visibleStudents.length, 0);
 
   // --- SEARCH HANDLER ---
   const handleSearchGrades = (e: FormEvent) => {
@@ -1243,7 +1259,10 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     }
   };
 
-  const scheduleData = schedules.find(s => s.className === selectedScheduleClass);
+  const scheduleData = useMemo(
+    () => schedules.find(s => s.className === selectedScheduleClass),
+    [schedules, selectedScheduleClass]
+  );
 
   return (
     <div className="space-y-10 py-6 font-sans relative">
@@ -1337,7 +1356,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                 const isSelected = selectedLookupClass === cls;
                 const studentCount = cls === "Tất cả" 
                   ? students.length 
-                  : students.filter(s => s.className === cls).length;
+                  : studentCountByClass.get(cls) || 0;
 
                 return (
                   <div
@@ -1402,7 +1421,8 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
               {/* Scrollable List */}
               <div className="flex-1 overflow-y-auto pr-1 space-y-2 max-h-[420px] scrollbar-thin">
                 {filteredStudents.length > 0 ? (
-                  filteredStudents.map((stu) => {
+                  <>
+                    {visibleStudents.map((stu) => {
                     const isStudentSelected = searchedStudent?.id === stu.id;
                     return (
                       <div
@@ -1448,7 +1468,13 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                         </div>
                       </div>
                     );
-                  })
+                    })}
+                    {hiddenStudentCount > 0 && (
+                      <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 px-3 py-2 text-center text-[11px] font-semibold text-emerald-800">
+                        Đang hiển thị {visibleStudents.length}/{filteredStudents.length} học sinh. Hãy chọn lớp cụ thể hoặc dùng ô tra cứu để tìm nhanh.
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-center py-12 space-y-2">
                     <p className="text-xs text-slate-400 font-medium">Chưa có học sinh nào trong lớp này.</p>
