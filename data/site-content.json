@@ -198,26 +198,7 @@
       "color": "from-green-500 to-emerald-700"
     }
   ],
-  "students": [
-    {
-      "id": "LVT-2026-04",
-      "name": "Y Blôk Êban",
-      "className": "5C",
-      "birthDate": "14/01/2015",
-      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&fm=webp&q=75&w=200",
-      "grades": {
-        "math": 9,
-        "vietnamese": 8.5,
-        "science": 9.5,
-        "english": 8,
-        "historyGeo": 9.5,
-        "informatics": 9
-      },
-      "conduct": "Tốt",
-      "comment": "Y Blôk có tư duy Toán học rất nhanh nhạy, tính cách năng nổ, là Chi đội trưởng gương mẫu, luôn hoàn thành xuất sắc các hoạt động Sao nhi đồng.",
-      "rank": "Hoàn thành xuất sắc"
-    }
-  ],
+  "students": [],
   "schedules": [
     {
       "className": "Lớp 5A - GVCN: Thầy Uông Đông Anh",
@@ -303,5 +284,5 @@
     "sloganAuthor": "Tập thể Thầy Cô giáo",
     "quickNote": "Học sinh tiêu biểu năm học: 100% đạt chuẩn phẩm chất và năng lực tiểu học."
   },
-  "updatedAt": "2026-07-07T02:23:56.362Z"
+  "updatedAt": "2026-07-07T02:31:04.292Z"
 }

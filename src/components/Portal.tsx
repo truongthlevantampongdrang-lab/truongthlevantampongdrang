@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo } from "react";
+import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo, memo } from "react";
 import { readSheet } from "read-excel-file/browser";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
@@ -95,11 +95,13 @@ const excelFileToText = async (file: File) => {
     .join("\n");
 };
 
-export default function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
+function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, schedules, updateSchedules }: PortalProps) {
   const pendingSiteContentRef = useRef<Record<string, unknown>>({});
   const saveSiteContentTimerRef = useRef<number | null>(null);
   const [hasLoadedSiteContent, setHasLoadedSiteContent] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<"grades" | "schedule" | "clubs" | "teachers">("grades");
+  const [isScheduleEditingEnabled, setIsScheduleEditingEnabled] = useState(false);
+  const scheduleAdminMode = isAdminMode && isScheduleEditingEnabled;
 
   // Grades Search States
   const [studentSearchId, setStudentSearchId] = useState("");
@@ -166,6 +168,12 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   const [draggedBankSubject, setDraggedBankSubject] = useState<string | null>(null);
   const [inlineEditingCell, setInlineEditingCell] = useState<{ dayIdx: number; subIdx: number } | null>(null);
   const [inlineEditingValue, setInlineEditingValue] = useState("");
+
+  useEffect(() => {
+    setIsScheduleEditingEnabled(false);
+    setShowTeacherPanel(false);
+    setInlineEditingCell(null);
+  }, [activeSubTab, isAdminMode]);
 
   // Auto-normalize schedules to 8 subjects (4 Sáng, 4 Chiều)
   useEffect(() => {
@@ -908,21 +916,21 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
 
   // --- TIMETABLE DRAG AND DROP HANDLERS ---
   const handleDragStart = (e: DragEvent, dayIdx: number, subIdx: number) => {
-    if (!isAdminMode) return;
+    if (!scheduleAdminMode) return;
     setDraggedSubject({ dayIdx, subIdx });
     setDraggedBankSubject(null);
     e.dataTransfer.setData("text/plain", schedules.find(s => s.className === selectedScheduleClass)?.days[dayIdx].subjects[subIdx] || "");
   };
 
   const handleBankDragStart = (e: DragEvent, subject: string) => {
-    if (!isAdminMode) return;
+    if (!scheduleAdminMode) return;
     setDraggedBankSubject(subject);
     setDraggedSubject(null);
     e.dataTransfer.setData("text/plain", subject);
   };
 
   const handleDrop = (e: DragEvent, dayIdx: number, subIdx: number) => {
-    if (!isAdminMode) return;
+    if (!scheduleAdminMode) return;
     e.preventDefault();
 
     const currentSchedule = schedules.find(s => s.className === selectedScheduleClass);
@@ -1734,13 +1742,27 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                   Phân Hệ Quản Lý & Tra Cứu Thời Khóa Biểu
                 </h3>
                 <p className="text-xs text-slate-500 leading-normal">
-                  Hiển thị lịch học 2 buổi Sáng & Chiều. {isAdminMode && "Quyền quản trị viên: Kéo thả các môn hoặc kéo từ kho môn học để sắp xếp nhanh."}
+                  Hiển thị lịch học 2 buổi Sáng & Chiều. {scheduleAdminMode && "Quyền quản trị viên: Kéo thả các môn hoặc kéo từ kho môn học để sắp xếp nhanh."}
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 {isAdminMode && (
                   <>
+                    <button
+                      type="button"
+                      onClick={() => setIsScheduleEditingEnabled((value) => !value)}
+                      className={`flex items-center space-x-1 px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95 ${
+                        scheduleAdminMode
+                          ? "bg-amber-100 text-amber-900 border border-amber-200"
+                          : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      }`}
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span>{scheduleAdminMode ? "Tắt sửa TKB" : "Sửa thời khóa biểu"}</span>
+                    </button>
+                    {scheduleAdminMode && (
+                      <>
                     <button
                       onClick={() => setShowNewClassModal(true)}
                       className="flex items-center space-x-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95"
@@ -1769,6 +1791,8 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                       <Users className="h-4 w-4" />
                       <span>{showTeacherPanel ? "Đóng QL Giáo Viên" : "Quản lý Giáo Viên"}</span>
                     </button>
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -1808,7 +1832,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                       Mã lớp: {getOnlyClassName(scheduleData.className)}
                     </span>
                   </div>
-                  {isAdminMode ? (
+                  {scheduleAdminMode ? (
                     <select
                       value={parseClassAndTeacher(scheduleData.className).teacher}
                       onChange={(e) => handleUpdateClassTeacher(scheduleData.className, e.target.value)}
@@ -1832,7 +1856,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
             </div>
 
             {/* Teacher Management Sidebar/Dashboard Panel */}
-            {isAdminMode && showTeacherPanel && (
+            {scheduleAdminMode && showTeacherPanel && (
               <div className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 space-y-4 animate-in slide-in-from-top-4 duration-300">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <div className="flex items-center space-x-2">
@@ -1918,7 +1942,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                   <p className="text-xs text-slate-400 mt-1">Lịch học chính khóa 2 buổi/ngày • Trường Tiểu Học Lê Văn Tám</p>
                 </div>
 
-                {isAdminMode && (
+                {scheduleAdminMode && (
                   <div className="flex items-center space-x-1 bg-amber-50 text-amber-800 px-3 py-1.5 rounded-xl border border-amber-200/50 text-[11px] font-bold">
                     <Move className="h-3.5 w-3.5 text-amber-600 shrink-0 animate-pulse" />
                     <span>Kéo thả các môn để swap, kéo môn mới từ kho, hoặc click đúp vào ô để sửa!</span>
@@ -1977,10 +2001,10 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                                 />
                               ) : (
                                 <div
-                                  draggable={isAdminMode}
+                                  draggable={scheduleAdminMode}
                                   onDragStart={(e) => handleDragStart(e, dayIdx, sIdx)}
                                   className={`relative rounded-xl px-3 py-2.5 h-full text-xs font-bold shadow-sm select-none transition-all flex flex-col justify-center items-center group/cell ${
-                                    isAdminMode
+                                    scheduleAdminMode
                                       ? "cursor-grab active:cursor-grabbing hover:scale-[1.02] hover:border-amber-400 hover:ring-2 hover:ring-amber-300/30"
                                       : ""
                                   } ${
@@ -2002,7 +2026,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                                   <span>{subject}</span>
 
                                   {/* Quick Action Overlay for Admin */}
-                                  {isAdminMode && (
+                                  {scheduleAdminMode && (
                                     <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover/cell:opacity-100 transition-opacity flex items-center justify-center space-x-1.5 z-10">
                                       <button
                                         type="button"
@@ -2036,7 +2060,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                                     </div>
                                   )}
 
-                                  {isAdminMode && (
+                                  {scheduleAdminMode && (
                                     <span className="text-[8px] text-slate-400 group-hover/cell:opacity-0 transition-opacity mt-0.5 pointer-events-none">
                                       Kéo hoặc hover để chỉnh sửa
                                     </span>
@@ -2092,10 +2116,10 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                                 />
                               ) : (
                                 <div
-                                  draggable={isAdminMode}
+                                  draggable={scheduleAdminMode}
                                   onDragStart={(e) => handleDragStart(e, dayIdx, sIdx)}
                                   className={`relative rounded-xl px-3 py-2.5 h-full text-xs font-bold shadow-sm select-none transition-all flex flex-col justify-center items-center group/cell ${
-                                    isAdminMode
+                                    scheduleAdminMode
                                       ? "cursor-grab active:cursor-grabbing hover:scale-[1.02] hover:border-amber-400 hover:ring-2 hover:ring-amber-300/30"
                                       : ""
                                   } ${
@@ -2117,7 +2141,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                                   <span>{subject}</span>
 
                                   {/* Quick Action Overlay for Admin */}
-                                  {isAdminMode && (
+                                  {scheduleAdminMode && (
                                     <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover/cell:opacity-100 transition-opacity flex items-center justify-center space-x-1.5 z-10">
                                       <button
                                         type="button"
@@ -2151,7 +2175,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
                                     </div>
                                   )}
 
-                                  {isAdminMode && (
+                                  {scheduleAdminMode && (
                                     <span className="text-[8px] text-slate-400 group-hover/cell:opacity-0 transition-opacity mt-0.5 pointer-events-none">
                                       Kéo hoặc hover để chỉnh sửa
                                     </span>
@@ -2168,7 +2192,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
               </div>
 
               {/* Subject Bank (Kho môn học) for easy drag-to-assign */}
-              {isAdminMode && (
+              {scheduleAdminMode && (
                 <div className="bg-slate-50 rounded-2xl p-5 border border-emerald-100/50 space-y-3 animate-in slide-in-from-bottom-4 duration-300">
                   <div className="flex items-center space-x-2 border-b border-emerald-100/30 pb-2">
                     <Layers className="h-4 w-4 text-emerald-600" />
@@ -3284,3 +3308,5 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
     </div>
   );
 }
+
+export default memo(Portal);

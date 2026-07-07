@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode, useState, useEffect, useRef, useMemo, useTransition, FormEvent } from "react";
+import { Component, ErrorInfo, ReactNode, useState, useEffect, useRef, useMemo, useTransition, useCallback, FormEvent } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
@@ -500,21 +500,21 @@ export default function App() {
   }, [footerInfo]);
 
   // Handle updates from components
-  const updateSchoolInfo = (info: typeof schoolInfo) => setSchoolInfo(info);
-  const updateFooterInfo = (info: typeof footerInfo) => setFooterInfo(info);
-  const updateNews = (items: NewsItem[]) => setNews(items);
-  const updateClubs = (items: SchoolClub[]) => setClubs(items);
-  const updateStudents = (items: StudentScore[]) => setStudents(items);
-  const updateSchedules = (items: ClassSchedule[]) => setSchedules(items);
+  const updateSchoolInfo = useCallback((info: typeof schoolInfo) => setSchoolInfo(info), []);
+  const updateFooterInfo = useCallback((info: typeof footerInfo) => setFooterInfo(info), []);
+  const updateNews = useCallback((items: NewsItem[]) => setNews(items), []);
+  const updateClubs = useCallback((items: SchoolClub[]) => setClubs(items), []);
+  const updateStudents = useCallback((items: StudentScore[]) => setStudents(items), []);
+  const updateSchedules = useCallback((items: ClassSchedule[]) => setSchedules(items), []);
 
-  const closeTransientAdminUi = () => {
+  const closeTransientAdminUi = useCallback(() => {
     setShowChangeCredsModal(false);
     setShowLoginModal(false);
     setShowAdminMenuModal(false);
     setShowForgotPassword(false);
-  };
+  }, []);
 
-  const navigateToTab = (tab: string) => {
+  const navigateToTab = useCallback((tab: string) => {
     const page = SEO_PAGES.find((item) => item.tab === tab) || SEO_PAGES[0];
     const nextPath = getPagePath(page);
 
@@ -524,7 +524,7 @@ export default function App() {
     if (window.location.pathname !== nextPath) {
       window.history.pushState({ tab: page.tab }, "", nextPath);
     }
-  };
+  }, [closeTransientAdminUi]);
 
   const openChangeCredsModal = () => {
     setCredsError("");
