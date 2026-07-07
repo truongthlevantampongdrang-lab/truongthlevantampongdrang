@@ -2,7 +2,7 @@ import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo
 import { readSheet } from "read-excel-file/browser";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
-import { loadSiteContent, patchSiteContent } from "../siteContentSync";
+import { loadSiteContent, patchSiteContent, safeSetLocalStorage } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
 
@@ -130,9 +130,9 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   });
 
   useEffect(() => {
-    localStorage.setItem("lvt_teachers", JSON.stringify(teachers));
+    safeSetLocalStorage("lvt_teachers", JSON.stringify(teachers));
     saveSiteContent({ teachers });
-  }, [teachers, hasLoadedSiteContent]);
+  }, [teachers]);
 
   // Synchronize selectedScheduleClass when schedules change or if the class is deleted
   useEffect(() => {
@@ -253,19 +253,19 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   });
 
   useEffect(() => {
-    localStorage.setItem("lvt_admission_registrations", JSON.stringify(registrations));
+    safeSetLocalStorage("lvt_admission_registrations", JSON.stringify(registrations));
     saveSiteContent({ admissionRegistrations: registrations });
-  }, [registrations, hasLoadedSiteContent]);
+  }, [registrations]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_admission_instructions", admissionInstructions);
+    safeSetLocalStorage("lvt_admission_instructions", admissionInstructions);
     saveSiteContent({ admissionInstructions });
-  }, [admissionInstructions, hasLoadedSiteContent]);
+  }, [admissionInstructions]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_realtime_qa_messages", JSON.stringify(qaMessages));
+    safeSetLocalStorage("lvt_realtime_qa_messages", JSON.stringify(qaMessages));
     saveSiteContent({ realtimeQaMessages: qaMessages });
-  }, [qaMessages, hasLoadedSiteContent]);
+  }, [qaMessages]);
 
   // --- CMS MODALS STATES ---
   // Student Modal
@@ -322,9 +322,9 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   });
 
   useEffect(() => {
-    localStorage.setItem("lvt_added_lookup_classes", JSON.stringify(addedLookupClasses));
+    safeSetLocalStorage("lvt_added_lookup_classes", JSON.stringify(addedLookupClasses));
     saveSiteContent({ addedLookupClasses });
-  }, [addedLookupClasses, hasLoadedSiteContent]);
+  }, [addedLookupClasses]);
 
   useEffect(() => {
     let isMounted = true;
@@ -435,7 +435,7 @@ export default function Portal({ isAdminMode, clubs, updateClubs, students, upda
   }, [isAdminMode, isQaOpen, latestParentQa]);
 
   const saveSiteContent = (content: Record<string, unknown>) => {
-    if (!hasLoadedSiteContent) return;
+    if (!hasLoadedSiteContent || !isAdminMode) return;
 
     pendingSiteContentRef.current = {
       ...pendingSiteContentRef.current,

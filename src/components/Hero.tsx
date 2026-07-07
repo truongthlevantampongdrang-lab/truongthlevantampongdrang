@@ -1,6 +1,6 @@
 import { GraduationCap, Users, Award, BookOpen, ChevronRight, Sparkles, Star, Edit, X } from "lucide-react";
 import { useEffect, useRef, useState, FormEvent } from "react";
-import { loadSiteContent, patchSiteContent } from "../siteContentSync";
+import { loadSiteContent, patchSiteContent, safeSetLocalStorage } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
 
@@ -151,8 +151,8 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("lvt_home_highlight_content", JSON.stringify(highlightContent));
-    if (!hasLoadedHighlightContent) return;
+    safeSetLocalStorage("lvt_home_highlight_content", JSON.stringify(highlightContent));
+    if (!hasLoadedHighlightContent || !isAdminMode) return;
 
     if (highlightSaveTimerRef.current) {
       window.clearTimeout(highlightSaveTimerRef.current);
@@ -164,7 +164,7 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
         console.warn("Home highlight content sync failed:", error);
       });
     }, 900);
-  }, [highlightContent, hasLoadedHighlightContent]);
+  }, [highlightContent]);
 
   const highlights = highlightContent.items;
 

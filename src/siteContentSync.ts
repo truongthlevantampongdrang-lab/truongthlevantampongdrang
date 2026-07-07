@@ -2,6 +2,22 @@ const adminCsrfKey = "lvt_admin_csrf_token";
 
 type SiteContent = Record<string, unknown>;
 
+const SITE_CONTENT_REQUEST_TIMEOUT_MS = 15000;
+
+const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), SITE_CONTENT_REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: init.signal || controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+};
+
 const getPublicContentUrl = () => {
   const baseUrl = (import.meta as any).env?.BASE_URL || "/";
   return `${baseUrl}site-content.json?v=${Date.now()}`;
@@ -29,6 +45,16 @@ export const getAuthorizedHeaders = () => {
     "Content-Type": "application/json",
     ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
   };
+};
+
+export const safeSetLocalStorage = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    console.warn(`Local content cache skipped for ${key}:`, error);
+    return false;
+  }
 };
 
 export const loginAdmin = async (username: string, password: string) => {
@@ -103,7 +129,7 @@ export const requestPasswordReset = async (email: string) => {
 
 export const loadSiteContent = async (): Promise<SiteContent> => {
   try {
-    const response = await fetch("/api/site-content", { cache: "no-store" });
+    const response = await fetchWithTimeout("/api/site-content", { cache: "no-store" });
     if (response.ok && isJsonResponse(response)) {
       return await response.json();
     }
@@ -112,7 +138,7 @@ export const loadSiteContent = async (): Promise<SiteContent> => {
   }
 
   try {
-    const response = await fetch(getPublicContentUrl(), { cache: "no-store" });
+    const response = await fetchWithTimeout(getPublicContentUrl(), { cache: "no-store" });
     if (response.ok && isJsonResponse(response)) {
       return await response.json();
     }
@@ -124,7 +150,11 @@ export const loadSiteContent = async (): Promise<SiteContent> => {
 };
 
 export const patchSiteContent = async (patch: SiteContent) => {
-  const response = await fetch("/api/site-content", {
+  if (!getAdminSessionToken()) {
+    return { success: false, skipped: true };
+  }
+
+  const response = await fetchWithTimeout("/api/site-content", {
     method: "PATCH",
     headers: getAuthorizedHeaders(),
     body: JSON.stringify(patch),

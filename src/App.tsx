@@ -30,7 +30,8 @@ import {
   loginAdmin,
   logoutAdmin,
   patchSiteContent,
-  requestPasswordReset
+  requestPasswordReset,
+  safeSetLocalStorage
 } from "./siteContentSync";
 import { sampleImages } from "./editableAssets";
 
@@ -408,7 +409,7 @@ export default function App() {
   }, []);
 
   const saveSiteContent = (content: Record<string, unknown>) => {
-    if (!hasLoadedSiteContent) return;
+    if (!hasLoadedSiteContent || !isAdminMode) return;
 
     pendingSiteContentRef.current = {
       ...pendingSiteContentRef.current,
@@ -440,34 +441,34 @@ export default function App() {
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem("lvt_school_info", JSON.stringify(schoolInfo));
+    safeSetLocalStorage("lvt_school_info", JSON.stringify(schoolInfo));
     saveSiteContent({ schoolInfo });
-  }, [schoolInfo, hasLoadedSiteContent]);
+  }, [schoolInfo]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_news", JSON.stringify(news));
+    safeSetLocalStorage("lvt_news", JSON.stringify(news));
     saveSiteContent({ news });
-  }, [news, hasLoadedSiteContent]);
+  }, [news]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_clubs", JSON.stringify(clubs));
+    safeSetLocalStorage("lvt_clubs", JSON.stringify(clubs));
     saveSiteContent({ clubs });
-  }, [clubs, hasLoadedSiteContent]);
+  }, [clubs]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_students", JSON.stringify(students));
+    safeSetLocalStorage("lvt_students", JSON.stringify(students));
     saveSiteContent({ students });
-  }, [students, hasLoadedSiteContent]);
+  }, [students]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_schedules", JSON.stringify(schedules));
+    safeSetLocalStorage("lvt_schedules", JSON.stringify(schedules));
     saveSiteContent({ schedules });
-  }, [schedules, hasLoadedSiteContent]);
+  }, [schedules]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_footer_info", JSON.stringify(footerInfo));
+    safeSetLocalStorage("lvt_footer_info", JSON.stringify(footerInfo));
     saveSiteContent({ footerInfo });
-  }, [footerInfo, hasLoadedSiteContent]);
+  }, [footerInfo]);
 
   // Handle updates from components
   const updateSchoolInfo = (info: typeof schoolInfo) => setSchoolInfo(info);

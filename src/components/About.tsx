@@ -2,7 +2,7 @@ import { Award, BookOpen, GraduationCap, Heart, Milestone, Users, Edit, Plus, Tr
 import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
 import mammoth from "mammoth";
 import { getSharedGeminiApiKey } from "../geminiConfig";
-import { getAuthorizedHeaders, loadSiteContent, patchSiteContent } from "../siteContentSync";
+import { getAuthorizedHeaders, loadSiteContent, patchSiteContent, safeSetLocalStorage } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
 
@@ -91,14 +91,14 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   });
 
   useEffect(() => {
-    localStorage.setItem("lvt_about_milestones", JSON.stringify(milestones));
+    safeSetLocalStorage("lvt_about_milestones", JSON.stringify(milestones));
     saveSiteContent({ aboutMilestones: milestones });
-  }, [milestones, hasLoadedSiteContent]);
+  }, [milestones]);
 
   useEffect(() => {
-    localStorage.setItem("lvt_about_leaders", JSON.stringify(leaders));
+    safeSetLocalStorage("lvt_about_leaders", JSON.stringify(leaders));
     saveSiteContent({ aboutLeaders: leaders });
-  }, [leaders, hasLoadedSiteContent]);
+  }, [leaders]);
 
   useEffect(() => {
     let isMounted = true;
@@ -128,7 +128,7 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   }, []);
 
   const saveSiteContent = (content: Record<string, unknown>) => {
-    if (!hasLoadedSiteContent) return;
+    if (!hasLoadedSiteContent || !isAdminMode) return;
 
     pendingSiteContentRef.current = {
       ...pendingSiteContentRef.current,

@@ -326,6 +326,7 @@ const validateLeaderItems = (items: unknown) => {
 app.use(requireSameOrigin);
 
 const contentFilePath = path.join(process.cwd(), "data", "site-content.json");
+let siteContentWriteQueue: Promise<void> = Promise.resolve();
 
 const getPublicSiteContent = (content: Record<string, unknown>) => {
   const publicContent = { ...content };
@@ -353,6 +354,30 @@ async function writeSiteContent(content: Record<string, unknown>) {
   await mkdir(path.dirname(publicContentFilePath), { recursive: true });
   await writeFile(publicContentFilePath, JSON.stringify(publicContent, null, 2), "utf8");
 }
+
+const writeSiteContentPatch = async (patch: Record<string, unknown>) => {
+  const previousWrite = siteContentWriteQueue;
+  let releaseWriteLock: () => void = () => {};
+
+  siteContentWriteQueue = new Promise<void>((resolve) => {
+    releaseWriteLock = resolve;
+  });
+
+  await previousWrite.catch(() => {});
+
+  try {
+    const current = await readSiteContent();
+    const next = {
+      ...current,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+    await writeSiteContent(next);
+    return next;
+  } finally {
+    releaseWriteLock();
+  }
+};
 
 const getGitHubSyncConfig = () => {
   const token = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || "";
@@ -518,9 +543,7 @@ app.post("/api/admin/logout", requireAdmin, async (req, res) => {
 
 app.patch("/api/site-content", requireAdmin, validateSiteContentPatch, async (req, res) => {
   try {
-    const current = await readSiteContent();
-    const next = { ...current, ...req.body };
-    await writeSiteContent(next);
+    const next = await writeSiteContentPatch(req.body);
 
     let publishSync: PublishSyncResult = { enabled: false };
     try {
@@ -530,7 +553,7 @@ app.patch("/api/site-content", requireAdmin, validateSiteContentPatch, async (re
       publishSync = { enabled: true, error: "Khong the day noi dung len GitHub Pages." };
     }
 
-    return res.json({ success: true, content: next, publishSync });
+    return res.json({ success: true, updatedAt: next.updatedAt, publishSync });
   } catch (error: any) {
     console.error("Write Site Content Error:", error);
     return res.status(500).json({ error: "Khong the luu noi dung website." });

@@ -1,6 +1,11 @@
 import { ChangeEvent, useId, useState } from "react";
 import { ImagePlus } from "lucide-react";
 
+const COMPRESSED_IMAGE_TYPE = "image/webp";
+const FALLBACK_IMAGE_TYPE = "image/jpeg";
+const COMPRESSED_IMAGE_QUALITY = 0.72;
+const MAX_INPUT_IMAGE_SIZE = 12 * 1024 * 1024;
+
 type ImageUploadFieldProps = {
   label: string;
   value?: string;
@@ -11,26 +16,56 @@ type ImageUploadFieldProps = {
   outputHeight?: number;
 };
 
+type ProcessedImage = {
+  dataUrl: string;
+  originalSize: number;
+  compressedSize: number;
+};
+
 const aspectClasses = {
   square: "aspect-square",
   wide: "aspect-[16/9]",
   portrait: "aspect-[4/5]",
 };
 
-const readImage = (file: File) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
+const formatBytes = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const blobToDataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
-      image.src = String(reader.result);
-    };
+    reader.onload = () => resolve(String(reader.result));
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
   });
 
-const cropImageToDataUrl = async (file: File, width: number, height: number) => {
+const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
+  new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, type, quality);
+  });
+
+const readImage = (file: File) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+
+    image.onerror = (error) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(error);
+    };
+
+    image.src = objectUrl;
+  });
+
+const cropImageToDataUrl = async (file: File, width: number, height: number): Promise<ProcessedImage> => {
   const image = await readImage(file);
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
@@ -50,7 +85,22 @@ const cropImageToDataUrl = async (file: File, width: number, height: number) => 
   const sourceY = (image.height - sourceHeight) / 2;
 
   context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
-  return canvas.toDataURL("image/jpeg", 0.88);
+
+  const webpBlob = await canvasToBlob(canvas, COMPRESSED_IMAGE_TYPE, COMPRESSED_IMAGE_QUALITY);
+  const blob =
+    webpBlob?.type === COMPRESSED_IMAGE_TYPE
+      ? webpBlob
+      : await canvasToBlob(canvas, FALLBACK_IMAGE_TYPE, COMPRESSED_IMAGE_QUALITY);
+
+  if (!blob) {
+    throw new Error("Cannot compress image");
+  }
+
+  return {
+    dataUrl: await blobToDataUrl(blob),
+    originalSize: file.size,
+    compressedSize: blob.size,
+  };
 };
 
 export default function ImageUploadField({
@@ -64,6 +114,8 @@ export default function ImageUploadField({
 }: ImageUploadFieldProps) {
   const id = useId();
   const [error, setError] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [compressionInfo, setCompressionInfo] = useState("");
   const preview = value || fallback || "";
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -74,16 +126,27 @@ export default function ImageUploadField({
 
     if (!file.type.startsWith("image/")) {
       setError("Vui lòng chọn đúng file ảnh.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_INPUT_IMAGE_SIZE) {
+      setError(`Ảnh quá lớn (${formatBytes(file.size)}). Vui lòng chọn ảnh tối đa ${formatBytes(MAX_INPUT_IMAGE_SIZE)}.`);
+      event.target.value = "";
       return;
     }
 
     try {
       setError("");
-      const dataUrl = await cropImageToDataUrl(file, outputWidth, outputHeight);
-      onChange(dataUrl);
+      setCompressionInfo("");
+      setIsProcessing(true);
+      const processed = await cropImageToDataUrl(file, outputWidth, outputHeight);
+      onChange(processed.dataUrl);
+      setCompressionInfo(`Đã giảm từ ${formatBytes(processed.originalSize)} xuống ${formatBytes(processed.compressedSize)}.`);
     } catch {
       setError("Chưa xử lý được ảnh này, vui lòng chọn ảnh khác.");
     } finally {
+      setIsProcessing(false);
       event.target.value = "";
     }
   };
@@ -107,14 +170,17 @@ export default function ImageUploadField({
           <input id={id} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
           <label
             htmlFor={id}
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700"
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all ${
+              isProcessing ? "cursor-wait bg-slate-400" : "cursor-pointer bg-emerald-600 hover:bg-emerald-700"
+            }`}
           >
             <ImagePlus className="h-4 w-4" />
-            <span>Thay ảnh</span>
+            <span>{isProcessing ? "Đang nén ảnh..." : "Thay ảnh"}</span>
           </label>
           <p className="text-xs font-medium text-slate-500">
-            Ảnh sẽ tự căn giữa và cắt vừa khung khi lưu.
+            Ảnh sẽ tự căn giữa, cắt vừa khung và nén nhẹ trước khi lưu.
           </p>
+          {compressionInfo && <p className="text-xs font-semibold text-emerald-700">{compressionInfo}</p>}
           {error && <p className="text-xs font-semibold text-rose-600">{error}</p>}
         </div>
       </div>
