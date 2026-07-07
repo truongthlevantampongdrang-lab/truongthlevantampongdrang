@@ -31,7 +31,7 @@ import {
   logoutAdmin,
   patchSiteContent,
   requestPasswordReset,
-  safeSetLocalStorage
+  scheduleLocalStorageWrite
 } from "./siteContentSync";
 import { sampleImages } from "./editableAssets";
 
@@ -457,7 +457,7 @@ export default function App() {
       patchSiteContent(patch).catch((error) => {
         console.warn("Site content sync failed:", error);
       });
-    }, 900);
+    }, 1800);
   };
 
   useEffect(() => {
@@ -470,32 +470,32 @@ export default function App() {
 
   // Sync to localStorage
   useEffect(() => {
-    safeSetLocalStorage("lvt_school_info", JSON.stringify(schoolInfo));
+    scheduleLocalStorageWrite("lvt_school_info", schoolInfo);
     saveSiteContent({ schoolInfo });
   }, [schoolInfo]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_news", JSON.stringify(news));
+    scheduleLocalStorageWrite("lvt_news", news);
     saveSiteContent({ news });
   }, [news]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_clubs", JSON.stringify(clubs));
+    scheduleLocalStorageWrite("lvt_clubs", clubs);
     saveSiteContent({ clubs });
   }, [clubs]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_students", JSON.stringify(students));
+    scheduleLocalStorageWrite("lvt_students", students);
     saveSiteContent({ students });
   }, [students]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_schedules", JSON.stringify(schedules));
+    scheduleLocalStorageWrite("lvt_schedules", schedules);
     saveSiteContent({ schedules });
   }, [schedules]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_footer_info", JSON.stringify(footerInfo));
+    scheduleLocalStorageWrite("lvt_footer_info", footerInfo);
     saveSiteContent({ footerInfo });
   }, [footerInfo]);
 

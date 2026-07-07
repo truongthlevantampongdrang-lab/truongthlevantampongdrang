@@ -2,7 +2,7 @@ import { useState, FormEvent, useEffect, ChangeEvent, DragEvent, useRef, useMemo
 import { readSheet } from "read-excel-file/browser";
 import { StudentScore, ClubRegistration, SchoolClub, ClassSchedule, ScheduleDay } from "../types";
 import { Search, GraduationCap, Calendar, Clock, User, Phone, CheckCircle, FileText, Sparkles, BookOpen, Music, Palette, Award, Globe, Dribbble, ClipboardList, Edit, Trash2, Plus, Save, X, Upload, Users, Settings, Layers, Move, Check, HelpCircle, AlertTriangle, Info, Download, MessageCircle, Send } from "lucide-react";
-import { loadSiteContent, patchSiteContent, safeSetLocalStorage } from "../siteContentSync";
+import { loadSiteContent, patchSiteContent, scheduleLocalStorageWrite } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
 
@@ -133,7 +133,7 @@ function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, sch
   });
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_teachers", JSON.stringify(teachers));
+    scheduleLocalStorageWrite("lvt_teachers", teachers);
     saveSiteContent({ teachers });
   }, [teachers]);
 
@@ -262,17 +262,17 @@ function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, sch
   });
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_admission_registrations", JSON.stringify(registrations));
+    scheduleLocalStorageWrite("lvt_admission_registrations", registrations);
     saveSiteContent({ admissionRegistrations: registrations });
   }, [registrations]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_admission_instructions", admissionInstructions);
+    scheduleLocalStorageWrite("lvt_admission_instructions", admissionInstructions);
     saveSiteContent({ admissionInstructions });
   }, [admissionInstructions]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_realtime_qa_messages", JSON.stringify(qaMessages));
+    scheduleLocalStorageWrite("lvt_realtime_qa_messages", qaMessages);
     saveSiteContent({ realtimeQaMessages: qaMessages });
   }, [qaMessages]);
 
@@ -331,7 +331,7 @@ function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, sch
   });
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_added_lookup_classes", JSON.stringify(addedLookupClasses));
+    scheduleLocalStorageWrite("lvt_added_lookup_classes", addedLookupClasses);
     saveSiteContent({ addedLookupClasses });
   }, [addedLookupClasses]);
 
@@ -463,7 +463,7 @@ function Portal({ isAdminMode, clubs, updateClubs, students, updateStudents, sch
       patchSiteContent(patch).catch((error) => {
         console.warn("Portal content sync failed:", error);
       });
-    }, 900);
+    }, 1800);
   };
 
   const [showAddLookupClassModal, setShowAddLookupClassModal] = useState(false);

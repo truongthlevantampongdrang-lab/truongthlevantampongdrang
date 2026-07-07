@@ -57,6 +57,36 @@ export const safeSetLocalStorage = (key: string, value: string) => {
   }
 };
 
+const localStorageWriteTimers = new Map<string, number>();
+
+export const scheduleLocalStorageWrite = (key: string, value: unknown, delayMs = 700) => {
+  const existingTimer = localStorageWriteTimers.get(key);
+  if (existingTimer) {
+    window.clearTimeout(existingTimer);
+  }
+
+  const timerId = window.setTimeout(() => {
+    localStorageWriteTimers.delete(key);
+
+    const write = () => {
+      const serializedValue = typeof value === "string" ? value : JSON.stringify(value);
+      safeSetLocalStorage(key, serializedValue);
+    };
+
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+    };
+
+    if (typeof idleWindow.requestIdleCallback === "function") {
+      idleWindow.requestIdleCallback(write, { timeout: 1500 });
+    } else {
+      window.setTimeout(write, 0);
+    }
+  }, delayMs);
+
+  localStorageWriteTimers.set(key, timerId);
+};
+
 export const loginAdmin = async (username: string, password: string) => {
   const response = await fetch("/api/admin/login", {
     method: "POST",

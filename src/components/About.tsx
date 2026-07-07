@@ -2,7 +2,7 @@ import { Award, BookOpen, GraduationCap, Heart, Milestone, Users, Edit, Plus, Tr
 import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
 import mammoth from "mammoth";
 import { getSharedGeminiApiKey } from "../geminiConfig";
-import { getAuthorizedHeaders, loadSiteContent, patchSiteContent, safeSetLocalStorage } from "../siteContentSync";
+import { getAuthorizedHeaders, loadSiteContent, patchSiteContent, scheduleLocalStorageWrite } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
 
@@ -91,12 +91,12 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
   });
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_about_milestones", JSON.stringify(milestones));
+    scheduleLocalStorageWrite("lvt_about_milestones", milestones);
     saveSiteContent({ aboutMilestones: milestones });
   }, [milestones]);
 
   useEffect(() => {
-    safeSetLocalStorage("lvt_about_leaders", JSON.stringify(leaders));
+    scheduleLocalStorageWrite("lvt_about_leaders", leaders);
     saveSiteContent({ aboutLeaders: leaders });
   }, [leaders]);
 
@@ -147,7 +147,7 @@ export default function About({ isAdminMode, schoolInfo }: AboutProps) {
       patchSiteContent(patch).catch((error) => {
         console.warn("About content sync failed:", error);
       });
-    }, 900);
+    }, 1800);
   };
 
   useEffect(() => {
