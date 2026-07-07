@@ -1,5 +1,5 @@
 import { GraduationCap, Users, Award, BookOpen, ChevronRight, Sparkles, Star, Edit, X } from "lucide-react";
-import { useEffect, useRef, useState, useTransition, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import { loadSiteContent, patchSiteContent, scheduleLocalStorageWrite } from "../siteContentSync";
 import { sampleImages } from "../editableAssets";
 import ImageUploadField from "./ImageUploadField";
@@ -42,7 +42,6 @@ interface HeroProps {
 
 export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchoolInfo }: HeroProps) {
   const highlightSaveTimerRef = useRef<number | null>(null);
-  const [, startContentUpdateTransition] = useTransition();
   const [showEditSchoolModal, setShowEditSchoolModal] = useState(false);
   const [showEditPrincipalModal, setShowEditPrincipalModal] = useState(false);
   const [showEditStatsModal, setShowEditStatsModal] = useState(false);
@@ -193,11 +192,9 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
     const nextItems = [...highlightContent.items];
     nextItems[editingHighlightIndex] = highlightForm;
+    setHighlightContent({ ...highlightContent, items: nextItems });
     setShowEditHighlightModal(false);
     setEditingHighlightIndex(null);
-    startContentUpdateTransition(() => {
-      setHighlightContent({ ...highlightContent, items: nextItems });
-    });
   };
 
   const openEditCtaModal = () => {
@@ -211,13 +208,11 @@ export default function Hero({ onNavigate, isAdminMode, schoolInfo, updateSchool
 
   const handleSaveCta = (e: FormEvent) => {
     e.preventDefault();
-    setShowEditCtaModal(false);
-    startContentUpdateTransition(() => {
-      setHighlightContent({
-        ...highlightContent,
-        ...ctaForm,
-      });
+    setHighlightContent({
+      ...highlightContent,
+      ...ctaForm,
     });
+    setShowEditCtaModal(false);
   };
 
 
